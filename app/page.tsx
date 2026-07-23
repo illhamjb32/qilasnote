@@ -28,7 +28,13 @@ export default function Home() {
     loadData();
   }, []);
 
-  const getTodayString = () => new Date().toISOString().split('T')[0];
+  const getTodayString = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const loadData = async () => {
     try {
@@ -46,11 +52,12 @@ export default function Home() {
     e.preventDefault();
     setLoading(true);
     try {
+      const now = new Date();
       const newRecord = {
         amount: parseInt(amount),
         time,
         date: getTodayString(),
-        timestamp: new Date().toISOString()
+        timestamp: now.toISOString()
       };
       await addMilkRecord(newRecord);
       setAmount('');
