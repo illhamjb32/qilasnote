@@ -61,7 +61,6 @@ export default function Home() {
       };
       await addMilkRecord(newRecord);
       setAmount('');
-      const now = new Date();
       setTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
       await loadData();
       setShowToast(true);
