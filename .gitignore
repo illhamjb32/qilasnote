@@ -31,7 +31,11 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env*
+# Note: .dev.vars is NOT ignored because Cloudflare Pages needs it at build time
+# Only ignore .env files that contain sensitive secrets
+.env
+.env.local
+!.dev.vars
 
 # vercel
 .vercel
