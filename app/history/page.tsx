@@ -163,7 +163,7 @@ export default function History() {
 
         {/* Chart */}
         <div className="card p-5 mb-6">
-          <div className="mb-4">
+          <div className="mb-4 px-1">
             <h2 className="text-base font-semibold text-on-surface">Tren 7 Hari</h2>
             <p className="text-xs text-on-surface-variant mt-0.5">Konsumsi harian Anda</p>
           </div>

@@ -186,12 +186,12 @@ export default function Insights() {
                     <div
                       className={`w-full rounded-t-lg transition-all duration-500 ${
                         metTarget
-                          ? 'bg-primary'
+                          ? 'bg-gradient-to-t from-primary to-primary-container'
                           : day.total > 0
-                          ? 'bg-primary/60'
-                          : 'bg-surface-container'
+                          ? 'bg-gradient-to-t from-primary/60 to-primary/40'
+                          : 'bg-surface-container-high'
                       }`}
-                      style={{ height: `${Math.max(heightPercent, day.total > 0 ? 5 : 0)}%` }}
+                      style={{ height: `${Math.max(heightPercent, day.total > 0 ? 5 : 2)}%`, minHeight: '2px' }}
                     />
                     {/* Day Label */}
                     <span className="text-xs text-outline mt-2">
