@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { MilkRecord } from '@/lib/types';
-import { getMilkRecordsByDate, addMilkRecord } from '@/lib/db';
+import { getMilkRecordsByDate, addMilkRecord, getUserSettings } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,14 +23,22 @@ export default function Home() {
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   useEffect(() => {
-    const savedTarget = localStorage.getItem('dailyTarget');
-    if (savedTarget) {
-      setDailyTarget(parseInt(savedTarget));
-    }
+    loadSettings();
     const now = new Date();
     setTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
     loadData();
   }, []);
+
+  const loadSettings = async () => {
+    try {
+      const settings = await getUserSettings();
+      if (settings) {
+        setDailyTarget(settings.daily_target);
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    }
+  };
 
   const getTodayString = () => {
     const now = new Date();

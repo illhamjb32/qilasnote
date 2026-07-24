@@ -223,31 +223,31 @@ export default function History() {
               const items = groupedData[date];
               const total = items.reduce((sum, item) => sum + item.amount, 0);
               return (
-                <div key={date} className="mb-6">
-                  <div className="flex justify-between items-center mb-3 px-1">
-                    <h3 className="text-title-md text-on-surface font-semibold">{formatDate(date)}</h3>
-                    <span className="bg-secondary-container text-on-secondary-container px-4 py-1.5 rounded-full text-label font-medium">{total} ml</span>
+                <div key={date} className="mb-5">
+                  <div className="flex justify-between items-center mb-2.5 px-0.5">
+                    <h3 className="text-sm font-semibold text-on-surface">{formatDate(date)}</h3>
+                    <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-medium">{total} ml</span>
                   </div>
                   <div className="space-y-2">
                     {items.map(item => (
                       <div
                         key={item.id}
-                        className="card p-4 flex items-center justify-between hover:shadow-md transition-all"
+                        className="card p-3.5 flex items-center justify-between hover:shadow-md transition-all"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
-                            <span className="material-symbols-outlined text-xl">water_drop</span>
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                            <span className="material-symbols-outlined text-lg">water_drop</span>
                           </div>
                           <div>
-                            <p className="text-body-lg text-on-surface font-medium">{item.amount} ml</p>
-                            <p className="text-label text-on-surface-variant">{item.time}</p>
+                            <p className="text-sm font-semibold text-on-surface leading-tight">{item.amount} ml</p>
+                            <p className="text-xs text-on-surface-variant leading-tight mt-0.5">{item.time}</p>
                           </div>
                         </div>
                         <button
                           onClick={() => setDeleteId(item.id)}
                           className="text-error p-2 hover:bg-error/10 rounded-full transition-all"
                         >
-                          <span className="material-symbols-outlined text-xl">delete</span>
+                          <span className="material-symbols-outlined text-lg">delete</span>
                         </button>
                       </div>
                     ))}
