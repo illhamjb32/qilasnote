@@ -117,34 +117,34 @@ export default function Insights() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-6">
           <div className="card p-5 bg-gradient-to-br from-primary/10 to-primary/5">
-            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-3">
-              <span className="material-symbols-outlined text-primary">water_drop</span>
+            <div className="w-11 h-11 rounded-full bg-primary/20 flex items-center justify-center mb-3">
+              <span className="material-symbols-outlined text-primary text-xl">water_drop</span>
             </div>
             <p className="text-label text-on-surface-variant mb-1">Total Konsumsi</p>
-            <p className="text-title-lg text-primary font-semibold">{totalConsumed} ml</p>
+            <p className="text-title-md text-primary font-semibold">{totalConsumed} ml</p>
           </div>
           <div className="card p-5 bg-gradient-to-br from-secondary/10 to-secondary/5">
-            <div className="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center mb-3">
-              <span className="material-symbols-outlined text-secondary">straighten</span>
+            <div className="w-11 h-11 rounded-full bg-secondary/20 flex items-center justify-center mb-3">
+              <span className="material-symbols-outlined text-secondary text-xl">straighten</span>
             </div>
             <p className="text-label text-on-surface-variant mb-1">Rata-rata Harian</p>
-            <p className="text-title-lg text-secondary font-semibold">{avgDaily} ml</p>
+            <p className="text-title-md text-secondary font-semibold">{avgDaily} ml</p>
           </div>
           <div className="card p-5 bg-gradient-to-br from-tertiary/10 to-tertiary/5">
-            <div className="w-12 h-12 rounded-full bg-tertiary/20 flex items-center justify-center mb-3">
-              <span className="material-symbols-outlined text-tertiary">verified</span>
+            <div className="w-11 h-11 rounded-full bg-tertiary/20 flex items-center justify-center mb-3">
+              <span className="material-symbols-outlined text-tertiary text-xl">verified</span>
             </div>
             <p className="text-label text-on-surface-variant mb-1">Target Tercapai</p>
-            <p className="text-headline text-tertiary">{daysTargetMet}<span className="text-sm ml-1">hari</span></p>
+            <p className="text-title-md text-tertiary font-semibold">{daysTargetMet} hari</p>
           </div>
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-on-surface-variant text-lg">repeat</span>
-              <span className="text-label text-on-surface-variant">Rata-rata/Sesi</span>
+          <div className="card p-5 bg-gradient-to-br from-surface-container/50 to-surface-container/30">
+            <div className="w-11 h-11 rounded-full bg-surface-container-high flex items-center justify-center mb-3">
+              <span className="material-symbols-outlined text-on-surface text-xl">repeat</span>
             </div>
-            <p className="text-headline text-on-surface">{avgPerSession}<span className="text-sm ml-1">ml</span></p>
+            <p className="text-label text-on-surface-variant mb-1">Rata-rata/Sesi</p>
+            <p className="text-title-md text-on-surface font-semibold">{avgPerSession} ml</p>
           </div>
         </div>
 

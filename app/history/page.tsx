@@ -136,26 +136,26 @@ export default function History() {
       {/* Main Content */}
       <main className="app-content">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="card p-4 bg-gradient-to-br from-primary/10 to-primary/5">
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="card p-5 bg-gradient-to-br from-primary/10 to-primary/5">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary">local_drink</span>
+              <div className="w-11 h-11 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary text-xl">local_drink</span>
               </div>
               <div>
                 <p className="text-label text-on-surface-variant">Rata-rata</p>
-                <p className="text-title-lg text-primary">{getWeeklyAverage()} ml</p>
+                <p className="text-title-md text-primary font-semibold">{getWeeklyAverage()} ml</p>
               </div>
             </div>
           </div>
-          <div className="card p-4 bg-gradient-to-br from-tertiary/10 to-tertiary/5">
+          <div className="card p-5 bg-gradient-to-br from-tertiary/10 to-tertiary/5">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-tertiary/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-tertiary">trending_up</span>
+              <div className="w-11 h-11 rounded-full bg-tertiary/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-tertiary text-xl">today</span>
               </div>
               <div>
                 <p className="text-label text-on-surface-variant">Hari Ini</p>
-                <p className="text-title-lg text-tertiary">{getDailyTotal(today)} ml</p>
+                <p className="text-title-md text-tertiary font-semibold">{getDailyTotal(today)} ml</p>
               </div>
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function History() {
         {/* Chart */}
         <div className="card p-6 mb-6">
           <div className="mb-6">
-            <h2 className="text-title-lg text-on-surface mb-1">Tren 7 Hari</h2>
+            <h2 className="text-title-md text-on-surface mb-1">Tren 7 Hari</h2>
             <p className="text-label text-on-surface-variant">Konsumsi harian Anda</p>
           </div>
 
@@ -209,7 +209,7 @@ export default function History() {
         </div>
 
         {/* History List */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {sortedDates.length === 0 ? (
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center mx-auto mb-4">
@@ -223,35 +223,32 @@ export default function History() {
               const items = groupedData[date];
               const total = items.reduce((sum, item) => sum + item.amount, 0);
               return (
-                <div key={date}>
-                  <div className="flex justify-between items-center mb-4 px-2">
-                    <h3 className="text-headline-sm text-on-surface">{formatDate(date)}</h3>
-                    <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-label">Total {total} ml</span>
+                <div key={date} className="mb-6">
+                  <div className="flex justify-between items-center mb-3 px-1">
+                    <h3 className="text-title-md text-on-surface font-semibold">{formatDate(date)}</h3>
+                    <span className="bg-secondary-container text-on-secondary-container px-4 py-1.5 rounded-full text-label font-medium">{total} ml</span>
                   </div>
-                  <div className="card divide-y divide-surface-container-high/30">
+                  <div className="space-y-2">
                     {items.map(item => (
                       <div
                         key={item.id}
-                        className="p-4 flex items-center justify-between hover:bg-surface-container-high/50 transition-colors cursor-pointer"
+                        className="card p-4 flex items-center justify-between hover:shadow-md transition-all"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center text-primary flex-shrink-0">
-                            <span className="material-symbols-outlined">baby_changing_station</span>
+                        <div className="flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                            <span className="material-symbols-outlined text-xl">water_drop</span>
                           </div>
                           <div>
-                            <p className="text-body text-on-surface">Susu Formula</p>
-                            <p className="text-label text-outline">Pukul {item.time}</p>
+                            <p className="text-body-lg text-on-surface font-medium">{item.amount} ml</p>
+                            <p className="text-label text-on-surface-variant">{item.time}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <p className="text-headline-sm text-primary">{item.amount}<span className="text-sm font-medium ml-0.5">ml</span></p>
-                          <button
-                            onClick={() => setDeleteId(item.id)}
-                            className="text-error p-2 hover:bg-error-container rounded-full transition-all"
-                          >
-                            <span className="material-symbols-outlined">delete</span>
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => setDeleteId(item.id)}
+                          className="text-error p-2 hover:bg-error/10 rounded-full transition-all"
+                        >
+                          <span className="material-symbols-outlined text-xl">delete</span>
+                        </button>
                       </div>
                     ))}
                   </div>
