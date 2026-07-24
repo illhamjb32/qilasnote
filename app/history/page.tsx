@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { MilkRecord } from '@/lib/types';
 import { getMilkRecords, getMilkRecordsByDateRange, deleteMilkRecord } from '@/lib/db';
 
+// Disable static prerendering - this page uses localStorage which isn't available on server
+export const dynamic = 'force-dynamic';
+
 export default function History() {
   const [currentFilter, setCurrentFilter] = useState('today');
   const [groupedData, setGroupedData] = useState<Record<string, MilkRecord[]>>({});
