@@ -99,6 +99,7 @@ export default function History() {
   const today = getTodayString();
 
   const getWeeklyAverage = () => {
+    if (typeof window === 'undefined') return 0;
     const weekStart = getWeekStart();
     const data: MilkRecord[] = JSON.parse(localStorage.getItem('milkData') || '[]');
     const weekData = data.filter(item => item.date >= weekStart);
@@ -108,11 +109,12 @@ export default function History() {
   };
 
   const getDailyTotal = (date: string) => {
+    if (typeof window === 'undefined') return 0;
     const data: MilkRecord[] = JSON.parse(localStorage.getItem('milkData') || '[]');
     return data.filter(item => item.date === date).reduce((sum, item) => sum + item.amount, 0);
   };
 
-  const maxTotal = Math.max(...last7Days.map(d => getDailyTotal(d)), 1000);
+  const maxTotal = typeof window !== 'undefined' ? Math.max(...last7Days.map(d => getDailyTotal(d)), 1000) : 1000;
 
   return (
     <div className="app-container">
