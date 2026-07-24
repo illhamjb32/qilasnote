@@ -152,8 +152,8 @@ export default function Insights() {
         <div className="card p-5 mb-6">
           <div className="flex justify-between items-center mb-5">
             <div>
-              <h2 className="text-base font-semibold text-on-surface mb-0.5">Grafik Konsumsi</h2>
-              <p className="text-xs text-on-surface-variant">Target: {dailyTarget} ml</p>
+              <h2 className="text-base font-semibold text-on-surface leading-tight">Grafik Konsumsi</h2>
+              <p className="text-xs text-on-surface-variant leading-tight">Target: {dailyTarget} ml</p>
             </div>
           </div>
 
