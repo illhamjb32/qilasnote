@@ -15,6 +15,7 @@ export default function Home() {
   const [showToast, setShowToast] = useState(false);
   const [dailyTarget, setDailyTarget] = useState(1000);
   const [loading, setLoading] = useState(false);
+  const [showCustomInput, setShowCustomInput] = useState(false);
 
   const percentage = Math.min((totalToday / dailyTarget) * 100, 100);
   const circumference = 2 * Math.PI * 88;
@@ -148,12 +149,44 @@ export default function Home() {
                 <span className={`text-label ${selected ? 'text-on-primary-container' : 'text-outline'}`}>ml</span>
               </button>
             ))}
-            <button type="button" className="flex-[1.5] min-w-[90px] h-14 bg-surface-container rounded-full flex items-center justify-center gap-2 transition-all hover:bg-surface-container-high">
+            <button 
+              type="button" 
+              onClick={() => setShowCustomInput(!showCustomInput)}
+              className="flex-[1.5] min-w-[90px] h-14 bg-surface-container rounded-full flex items-center justify-center gap-2 transition-all hover:bg-surface-container-high">
               <span className="material-symbols-outlined text-primary">edit</span>
               <span className="text-label text-on-surface">Custom</span>
             </button>
           </div>
         </div>
+
+        {/* Custom Input Dialog */}
+        {showCustomInput && (
+          <div className="card p-6 mb-6">
+            <h3 className="text-title-lg text-on-surface mb-4">Input Custom</h3>
+            <div className="mb-4">
+              <label className="text-label text-on-surface-variant mb-2 block">Jumlah (ml): {amount || 0}</label>
+              <input
+                type="range"
+                min="10"
+                max="300"
+                step="10"
+                value={amount || 0}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer"
+              />
+              <div className="flex justify-between text-label text-on-surface-variant mt-1">
+                <span>10 ml</span>
+                <span>300 ml</span>
+              </div>
+            </div>
+            <button 
+              type="button"
+              onClick={() => setShowCustomInput(false)}
+              className="btn btn-primary w-full">
+              Terapkan
+            </button>
+          </div>
+        )}
 
         {/* Input Form */}
         <div className="card p-6 mb-6">
