@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { deleteAllMilkRecords } from '@/lib/db';
+import { deleteAllMilkRecords, getUserSettings, updateUserSettings } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,35 +13,43 @@ export default function Settings() {
   const [reminderInterval, setReminderInterval] = useState('4');
 
   useEffect(() => {
-    const savedTarget = localStorage.getItem('dailyTarget');
-    if (savedTarget) {
-      setDailyTarget(parseInt(savedTarget));
-    }
-    const savedNotifications = localStorage.getItem('notificationsEnabled');
-    if (savedNotifications !== null) {
-      setNotificationEnabled(savedNotifications === 'true');
-    }
-    const savedInterval = localStorage.getItem('reminderInterval');
-    if (savedInterval) {
-      setReminderInterval(savedInterval);
-    }
+    loadSettings();
   }, []);
 
-  const handleSave = () => {
-    localStorage.setItem('dailyTarget', dailyTarget.toString());
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 2000);
+  const loadSettings = async () => {
+    try {
+      const settings = await getUserSettings();
+      if (settings) {
+        setDailyTarget(settings.daily_target);
+        setNotificationEnabled(settings.notifications_enabled);
+        setReminderInterval(settings.reminder_interval.toString());
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      await updateUserSettings({
+        daily_target: dailyTarget,
+        notifications_enabled: notificationEnabled,
+        reminder_interval: parseInt(reminderInterval)
+      });
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Gagal menyimpan pengaturan.');
+    }
   };
 
   const handleNotificationToggle = () => {
-    const newValue = !notificationEnabled;
-    setNotificationEnabled(newValue);
-    localStorage.setItem('notificationsEnabled', newValue.toString());
+    setNotificationEnabled(!notificationEnabled);
   };
 
   const handleIntervalChange = (value: string) => {
     setReminderInterval(value);
-    localStorage.setItem('reminderInterval', value);
   };
 
   const handleDeleteAllData = async () => {

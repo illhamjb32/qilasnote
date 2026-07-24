@@ -163,9 +163,9 @@ export default function History() {
 
         {/* Chart */}
         <div className="card p-5 mb-6">
-          <div className="mb-5">
-            <h2 className="text-base font-semibold text-on-surface leading-tight">Tren 7 Hari</h2>
-            <p className="text-xs text-on-surface-variant leading-tight">Konsumsi harian Anda</p>
+          <div className="mb-4">
+            <h2 className="text-base font-semibold text-on-surface">Tren 7 Hari</h2>
+            <p className="text-xs text-on-surface-variant mt-0.5">Konsumsi harian Anda</p>
           </div>
 
           <div className="flex items-end justify-between h-40 gap-2">
