@@ -16,6 +16,7 @@ export default function Home() {
   const [dailyTarget, setDailyTarget] = useState(1000);
   const [loading, setLoading] = useState(false);
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [quickValues, setQuickValues] = useState([60, 90, 120, 150]);
 
   const percentage = Math.min((totalToday / dailyTarget) * 100, 100);
   const circumference = 2 * Math.PI * 88;
@@ -133,20 +134,15 @@ export default function Home() {
         <div className="mb-6">
           <h2 className="text-headline-sm text-on-surface mb-4 px-1">Input Cepat</h2>
           <div className="flex flex-wrap gap-3">
-            {[
-              { value: 60, selected: amount === '60' },
-              { value: 90, selected: amount === '90' },
-              { value: 120, selected: amount === '120' },
-              { value: 150, selected: amount === '150' },
-            ].map(({ value, selected }) => (
+            {quickValues.map((value, index) => (
               <button
-                key={value}
+                key={index}
                 type="button"
                 onClick={() => quickInput(value)}
-                className={`flex-1 min-w-[70px] h-14 rounded-full flex flex-col items-center justify-center transition-all ${selected ? 'btn-chip active' : 'btn-chip'}`}
+                className={`flex-1 min-w-[70px] h-14 rounded-full flex flex-col items-center justify-center transition-all ${amount === value.toString() ? 'btn-chip active' : 'btn-chip'}`}
               >
-                <span className={`text-headline-sm ${selected ? 'text-on-primary-container' : 'text-primary'}`}>{value}</span>
-                <span className={`text-label ${selected ? 'text-on-primary-container' : 'text-outline'}`}>ml</span>
+                <span className={`text-headline-sm ${amount === value.toString() ? 'text-on-primary-container' : 'text-primary'}`}>{value}</span>
+                <span className={`text-label ${amount === value.toString() ? 'text-on-primary-container' : 'text-outline'}`}>ml</span>
               </button>
             ))}
             <button 
@@ -159,31 +155,33 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Custom Input Dialog */}
+        {/* Custom Quick Values Dialog */}
         {showCustomInput && (
           <div className="card p-6 mb-6">
-            <h3 className="text-title-lg text-on-surface mb-4">Input Custom</h3>
-            <div className="mb-4">
-              <label className="text-label text-on-surface-variant mb-2 block">Jumlah (ml): {amount || 0}</label>
-              <input
-                type="range"
-                min="10"
-                max="300"
-                step="10"
-                value={amount || 0}
-                onChange={(e) => setAmount(e.target.value)}
-                className="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer"
-              />
-              <div className="flex justify-between text-label text-on-surface-variant mt-1">
-                <span>10 ml</span>
-                <span>300 ml</span>
+            <h3 className="text-title-lg text-on-surface mb-4">Atur Input Cepat</h3>
+            {quickValues.map((value, index) => (
+              <div key={index} className="mb-4">
+                <label className="text-label text-on-surface-variant mb-2 block">Tombol {index + 1}: {value} ml</label>
+                <input
+                  type="range"
+                  min="10"
+                  max="300"
+                  step="10"
+                  value={value}
+                  onChange={(e) => {
+                    const newValues = [...quickValues];
+                    newValues[index] = parseInt(e.target.value);
+                    setQuickValues(newValues);
+                  }}
+                  className="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer"
+                />
               </div>
-            </div>
+            ))}
             <button 
               type="button"
               onClick={() => setShowCustomInput(false)}
               className="btn btn-primary w-full">
-              Terapkan
+              Simpan
             </button>
           </div>
         )}
@@ -201,6 +199,21 @@ export default function Home() {
                 placeholder="Masukkan jumlah ml"
                 required min="1"
               />
+              <div className="mt-3">
+                <input
+                  type="range"
+                  min="10"
+                  max="300"
+                  step="10"
+                  value={amount || 0}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-label text-on-surface-variant mt-1">
+                  <span>10</span>
+                  <span>300</span>
+                </div>
+              </div>
             </div>
             <div className="mb-4">
               <label className="text-label text-on-surface-variant mb-2 block">Waktu</label>
@@ -212,8 +225,8 @@ export default function Home() {
                 required
               />
             </div>
-            <button type="submit" className="btn btn-primary w-full py-4 text-lg">
-              Simpan
+            <button type="submit" className="btn btn-primary w-full py-4 text-lg" disabled={loading}>
+              {loading ? 'Menyimpan...' : 'Simpan'}
             </button>
           </form>
         </div>
