@@ -58,6 +58,18 @@ export async function deleteMilkRecord(id: number): Promise<void> {
   if (error) throw error;
 }
 
+export async function updateMilkRecord(id: number, record: Partial<MilkRecord>): Promise<MilkRecord> {
+  const { data, error } = await supabase
+    .from('milk_records')
+    .update(record)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function deleteAllMilkRecords(): Promise<void> {
   const { error } = await supabase
     .from('milk_records')

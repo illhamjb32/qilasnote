@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { MilkRecord } from '@/lib/types';
-import { getMilkRecords, getMilkRecordsByDateRange, deleteMilkRecord } from '@/lib/db';
+import { getMilkRecords, getMilkRecordsByDateRange, deleteMilkRecord, updateMilkRecord } from '@/lib/db';
 
 // Disable static prerendering - this page uses localStorage which isn't available on server
 export const dynamic = 'force-dynamic';
@@ -12,9 +12,17 @@ export default function History() {
   const [currentFilter, setCurrentFilter] = useState('today');
   const [groupedData, setGroupedData] = useState<Record<string, MilkRecord[]>>({});
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editAmount, setEditAmount] = useState('');
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [dailyTarget, setDailyTarget] = useState(1000);
 
   useEffect(() => {
+    const savedTarget = localStorage.getItem('dailyTarget');
+    if (savedTarget) {
+      setDailyTarget(parseInt(savedTarget));
+    }
     loadAndRenderHistory();
   }, [currentFilter]);
 
@@ -85,6 +93,7 @@ export default function History() {
         await deleteMilkRecord(deleteId);
         setDeleteId(null);
         await loadAndRenderHistory();
+        setToastMessage('Data berhasil dihapus!');
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2000);
       } catch (error) {
@@ -94,31 +103,42 @@ export default function History() {
     }
   };
 
-  const sortedDates = Object.keys(groupedData).sort().reverse();
-  const last7Days = getLast7Days();
-  const today = getTodayString();
+  const handleEdit = (record: MilkRecord) => {
+    setEditId(record.id);
+    setEditAmount(record.amount.toString());
+  };
 
-  const getWeeklyAverage = () => {
-    if (typeof window === 'undefined') return 0;
-    const weekStart = getWeekStart();
-    const data: MilkRecord[] = JSON.parse(localStorage.getItem('milkData') || '[]');
-    const weekData = data.filter(item => item.date >= weekStart);
-    const total = weekData.reduce((sum, item) => sum + item.amount, 0);
-    const daysWithData = new Set(weekData.map(item => item.date)).size;
-    return daysWithData > 0 ? Math.round(total / daysWithData) : 0;
+  const handleSaveEdit = async () => {
+    if (editId !== null && editAmount) {
+      try {
+        const amount = parseInt(editAmount);
+        if (isNaN(amount) || amount <= 0) {
+          alert('Jumlah harus berupa angka positif');
+          return;
+        }
+        await updateMilkRecord(editId, { amount });
+        setEditId(null);
+        setEditAmount('');
+        await loadAndRenderHistory();
+        setToastMessage('Data berhasil diupdate!');
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 2000);
+      } catch (error) {
+        console.error('Error updating record:', error);
+        alert('Gagal mengupdate data. Silakan coba lagi.');
+      }
+    }
   };
 
   const getDailyTotal = (date: string) => {
-    if (typeof window === 'undefined') return 0;
-    const data: MilkRecord[] = JSON.parse(localStorage.getItem('milkData') || '[]');
-    return data.filter(item => item.date === date).reduce((sum, item) => sum + item.amount, 0);
+    return groupedData[date]?.reduce((sum, item) => sum + item.amount, 0) || 0;
   };
 
-  const maxTotal = typeof window !== 'undefined' ? Math.max(...last7Days.map(d => getDailyTotal(d)), 1000) : 1000;
+  const sortedDates = Object.keys(groupedData).sort().reverse();
+  const today = getTodayString();
 
   return (
     <div className="app-container">
-      {/* Header */}
       <header className="app-header">
         <Link href="/">
           <button className="w-10 h-10 rounded-full hover:bg-surface-container-high flex items-center justify-center transition-colors">
@@ -133,63 +153,7 @@ export default function History() {
         </Link>
       </header>
 
-      {/* Main Content */}
       <main className="app-content">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="card p-4 bg-gradient-to-br from-primary/10 to-primary/5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-primary text-lg">local_drink</span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-on-surface-variant mb-0.5">Rata-rata</p>
-                <p className="text-lg font-bold text-primary">{getWeeklyAverage()} ml</p>
-              </div>
-            </div>
-          </div>
-          <div className="card p-4 bg-gradient-to-br from-tertiary/10 to-tertiary/5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-tertiary/20 flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-tertiary text-lg">today</span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-on-surface-variant mb-0.5">Hari Ini</p>
-                <p className="text-lg font-bold text-tertiary">{getDailyTotal(today)} ml</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Chart */}
-        <div className="card p-5 mb-6">
-          <div className="mb-4 px-1">
-            <h2 className="text-base font-semibold text-on-surface">Tren 7 Hari</h2>
-            <p className="text-xs text-on-surface-variant mt-0.5">Konsumsi harian Anda</p>
-          </div>
-
-          <div className="flex items-end justify-between h-40 gap-2">
-            {last7Days.map((date) => {
-              const total = getDailyTotal(date);
-              const heightPercent = (total / maxTotal) * 100;
-              const isToday = date === today;
-              return (
-                <div key={date} className="flex-1 flex flex-col items-center gap-2 group">
-                  <span className="text-label text-on-surface-variant group-hover:text-primary transition-colors">
-                    {total > 0 ? total : ''}
-                  </span>
-                  <div className="w-full bg-surface-container-highest rounded-lg relative flex items-end overflow-hidden" style={{ height: `${Math.max(heightPercent, 8)}%`, minHeight: '8px' }}>
-                    <div className={`w-full rounded-lg transition-all ${isToday ? 'bg-gradient-to-t from-primary to-primary-container' : 'bg-gradient-to-t from-primary/60 to-primary/40'}`} 
-                         style={{ height: '100%' }} />
-                  </div>
-                  <span className={`text-label ${isToday ? 'text-primary font-semibold' : 'text-on-surface-variant'}`}>
-                    {getDayName(date).slice(0, 3)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
         {/* Filter Tabs */}
         <div className="flex gap-3 mb-6">
@@ -222,12 +186,42 @@ export default function History() {
             sortedDates.map(date => {
               const items = groupedData[date];
               const total = items.reduce((sum, item) => sum + item.amount, 0);
+              const maxAmount = Math.max(...items.map(i => i.amount), dailyTarget);
               return (
                 <div key={date} className="mb-5">
                   <div className="flex justify-between items-center mb-2.5 px-0.5">
                     <h3 className="text-sm font-semibold text-on-surface">{formatDate(date)}</h3>
                     <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-medium">{total} ml</span>
                   </div>
+
+                  <div className="card p-4 mb-3">
+                    <div className="space-y-2">
+                      {items.map(item => {
+                        const widthPercent = (item.amount / maxAmount) * 100;
+                        const hour = parseInt(item.time.split(':')[0]);
+                        return (
+                          <div key={item.id} className="flex items-center gap-3">
+                            <div className="w-14 text-xs text-on-surface-variant text-right">
+                              {item.time}
+                            </div>
+                            <div className="flex-1 h-6 bg-surface-container rounded-lg relative overflow-hidden">
+                              <div
+                                className="h-full rounded-lg transition-all duration-300"
+                                style={{
+                                  width: `${Math.max(widthPercent, 3)}%`,
+                                  background: 'linear-gradient(to right, #2e6385, #a5d8ff)'
+                                }}
+                              />
+                            </div>
+                            <div className="w-16 text-sm font-semibold text-on-surface text-right">
+                              {item.amount} ml
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     {items.map(item => (
                       <div
@@ -243,6 +237,12 @@ export default function History() {
                             <p className="text-xs text-on-surface-variant leading-tight mt-0.5">{item.time}</p>
                           </div>
                         </div>
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="text-primary p-2 hover:bg-primary/10 rounded-full transition-all"
+                        >
+                          <span className="material-symbols-outlined text-lg">edit</span>
+                        </button>
                         <button
                           onClick={() => setDeleteId(item.id)}
                           className="text-error p-2 hover:bg-error/10 rounded-full transition-all"
@@ -275,6 +275,40 @@ export default function History() {
         </Link>
       </nav>
 
+      {/* Edit Modal */}
+      {editId !== null && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3 className="text-headline text-on-surface mb-4">Edit Jumlah</h3>
+            <input
+              type="number"
+              value={editAmount}
+              onChange={(e) => setEditAmount(e.target.value)}
+              className="w-full px-4 py-3 bg-surface-container rounded-xl text-on-surface text-center text-lg font-semibold mb-4"
+              placeholder="Jumlah (ml)"
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setEditId(null);
+                  setEditAmount('');
+                }}
+                className="flex-1 py-3 bg-surface-container text-on-surface rounded-full font-semibold transition-all"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="flex-1 py-3 bg-primary text-on-primary rounded-full font-semibold transition-all"
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Delete Modal */}
       {deleteId !== null && (
         <div className="modal-overlay">
@@ -303,7 +337,7 @@ export default function History() {
       {showToast && (
         <div className="toast">
           <span className="material-symbols-outlined text-on-tertiary-container">check_circle</span>
-          <span className="text-body">Data berhasil dihapus!</span>
+          <span className="text-body">{toastMessage}</span>
         </div>
       )}
     </div>

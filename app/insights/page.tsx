@@ -158,49 +158,38 @@ export default function Insights() {
           </div>
 
           {/* Bar Chart */}
-          <div className="relative">
-            {/* Target Line */}
-            <div
-              className="absolute left-0 right-0 border-t-2 border-dashed border-error z-10"
-              style={{ bottom: `${(dailyTarget / maxTotal) * 100}%` }}
-            >
-              <span className="absolute -top-5 right-0 text-xs text-error font-semibold">{dailyTarget} ml</span>
-            </div>
-
-            <div className="flex items-end justify-between h-48 gap-1 px-1">
-              {chartData.map((day, index) => {
-                const heightPercent = (day.total / maxTotal) * 100;
-                const metTarget = day.total >= dailyTarget;
-                return (
-                  <div
-                    key={day.date}
-                    className="flex-1 flex flex-col items-center group relative"
-                  >
-                    {/* Tooltip */}
-                    <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface px-3 py-2 rounded-lg text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
-                      <p className="font-semibold">{day.total} ml</p>
-                      <p className="text-xs opacity-70">{day.count} sesi</p>
-                    </div>
-
-                    {/* Bar */}
-                    <div
-                      className={`w-full rounded-t-lg transition-all duration-500 ${
-                        metTarget
-                          ? 'bg-gradient-to-t from-primary to-primary-container'
-                          : day.total > 0
-                          ? 'bg-gradient-to-t from-primary/60 to-primary/40'
-                          : 'bg-surface-container-high'
-                      }`}
-                      style={{ height: `${Math.max(heightPercent, day.total > 0 ? 5 : 2)}%`, minHeight: '2px' }}
-                    />
-                    {/* Day Label */}
-                    <span className="text-xs text-outline mt-2">
-                      {dateRange <= 14 ? getDayName(day.date) : getDayNumber(day.date)}
-                    </span>
+          <div className="space-y-3">
+            {chartData.map((day) => {
+              const widthPercent = maxTotal > 0 ? (day.total / maxTotal) * 100 : 0;
+              const metTarget = day.total >= dailyTarget;
+              return (
+                <div key={day.date} className="flex items-center gap-3">
+                  <div className="w-12 text-xs text-on-surface-variant text-right">
+                    {dateRange <= 14 ? getDayName(day.date) : getDayNumber(day.date)}
                   </div>
-                );
-              })}
-            </div>
+                  <div className="flex-1 h-8 bg-surface-container rounded-lg relative overflow-hidden">
+                    <div
+                      className="h-full rounded-lg transition-all duration-300"
+                      style={{
+                        width: `${Math.max(widthPercent, day.total > 0 ? 3 : 0)}%`,
+                        background: metTarget
+                          ? 'linear-gradient(to right, #2e6385, #a5d8ff)'
+                          : 'linear-gradient(to right, rgba(46, 99, 133, 0.6), rgba(46, 99, 133, 0.4))'
+                      }}
+                    />
+                    {dailyTarget > 0 && (
+                      <div
+                        className="absolute top-0 bottom-0 w-0.5 bg-error"
+                        style={{ left: `${(dailyTarget / maxTotal) * 100}%` }}
+                      />
+                    )}
+                  </div>
+                  <div className="w-16 text-sm font-semibold text-on-surface text-right">
+                    {day.total} ml
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Legend */}
