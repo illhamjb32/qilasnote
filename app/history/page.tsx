@@ -137,35 +137,35 @@ export default function History() {
       <main className="app-content">
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="card p-5 bg-gradient-to-br from-primary/10 to-primary/5">
+          <div className="card p-4 bg-gradient-to-br from-primary/10 to-primary/5">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary text-xl">local_drink</span>
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-primary text-lg">local_drink</span>
               </div>
-              <div>
-                <p className="text-label text-on-surface-variant">Rata-rata</p>
-                <p className="text-title-md text-primary font-semibold">{getWeeklyAverage()} ml</p>
+              <div className="min-w-0">
+                <p className="text-xs text-on-surface-variant mb-0.5">Rata-rata</p>
+                <p className="text-lg font-bold text-primary">{getWeeklyAverage()} ml</p>
               </div>
             </div>
           </div>
-          <div className="card p-5 bg-gradient-to-br from-tertiary/10 to-tertiary/5">
+          <div className="card p-4 bg-gradient-to-br from-tertiary/10 to-tertiary/5">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-tertiary/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-tertiary text-xl">today</span>
+              <div className="w-10 h-10 rounded-full bg-tertiary/20 flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-tertiary text-lg">today</span>
               </div>
-              <div>
-                <p className="text-label text-on-surface-variant">Hari Ini</p>
-                <p className="text-title-md text-tertiary font-semibold">{getDailyTotal(today)} ml</p>
+              <div className="min-w-0">
+                <p className="text-xs text-on-surface-variant mb-0.5">Hari Ini</p>
+                <p className="text-lg font-bold text-tertiary">{getDailyTotal(today)} ml</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Chart */}
-        <div className="card p-6 mb-6">
-          <div className="mb-6">
-            <h2 className="text-title-md text-on-surface mb-1">Tren 7 Hari</h2>
-            <p className="text-label text-on-surface-variant">Konsumsi harian Anda</p>
+        <div className="card p-5 mb-6">
+          <div className="mb-5">
+            <h2 className="text-base font-semibold text-on-surface mb-0.5">Tren 7 Hari</h2>
+            <p className="text-xs text-on-surface-variant">Konsumsi harian Anda</p>
           </div>
 
           <div className="flex items-end justify-between h-40 gap-2">

@@ -118,41 +118,43 @@ export default function Insights() {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="card p-5 bg-gradient-to-br from-primary/10 to-primary/5">
-            <div className="w-11 h-11 rounded-full bg-primary/20 flex items-center justify-center mb-3">
-              <span className="material-symbols-outlined text-primary text-xl">water_drop</span>
+          <div className="card p-4 bg-gradient-to-br from-primary/10 to-primary/5">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center mb-2">
+              <span className="material-symbols-outlined text-primary text-lg">water_drop</span>
             </div>
-            <p className="text-label text-on-surface-variant mb-1">Total Konsumsi</p>
-            <p className="text-title-md text-primary font-semibold">{totalConsumed} ml</p>
+            <p className="text-xs text-on-surface-variant mb-0.5">Total Konsumsi</p>
+            <p className="text-lg font-bold text-primary">{totalConsumed} ml</p>
           </div>
-          <div className="card p-5 bg-gradient-to-br from-secondary/10 to-secondary/5">
-            <div className="w-11 h-11 rounded-full bg-secondary/20 flex items-center justify-center mb-3">
-              <span className="material-symbols-outlined text-secondary text-xl">straighten</span>
+          <div className="card p-4 bg-gradient-to-br from-secondary/10 to-secondary/5">
+            <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center mb-2">
+              <span className="material-symbols-outlined text-secondary text-lg">straighten</span>
             </div>
-            <p className="text-label text-on-surface-variant mb-1">Rata-rata Harian</p>
-            <p className="text-title-md text-secondary font-semibold">{avgDaily} ml</p>
+            <p className="text-xs text-on-surface-variant mb-0.5">Rata-rata Harian</p>
+            <p className="text-lg font-bold text-secondary">{avgDaily} ml</p>
           </div>
-          <div className="card p-5 bg-gradient-to-br from-tertiary/10 to-tertiary/5">
-            <div className="w-11 h-11 rounded-full bg-tertiary/20 flex items-center justify-center mb-3">
-              <span className="material-symbols-outlined text-tertiary text-xl">verified</span>
+          <div className="card p-4 bg-gradient-to-br from-tertiary/10 to-tertiary/5">
+            <div className="w-10 h-10 rounded-full bg-tertiary/20 flex items-center justify-center mb-2">
+              <span className="material-symbols-outlined text-tertiary text-lg">verified</span>
             </div>
-            <p className="text-label text-on-surface-variant mb-1">Target Tercapai</p>
-            <p className="text-title-md text-tertiary font-semibold">{daysTargetMet} hari</p>
+            <p className="text-xs text-on-surface-variant mb-0.5">Target Tercapai</p>
+            <p className="text-lg font-bold text-tertiary">{daysTargetMet} hari</p>
           </div>
-          <div className="card p-5 bg-gradient-to-br from-surface-container/50 to-surface-container/30">
-            <div className="w-11 h-11 rounded-full bg-surface-container-high flex items-center justify-center mb-3">
-              <span className="material-symbols-outlined text-on-surface text-xl">repeat</span>
+          <div className="card p-4 bg-gradient-to-br from-surface-container/50 to-surface-container/30">
+            <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center mb-2">
+              <span className="material-symbols-outlined text-on-surface text-lg">repeat</span>
             </div>
-            <p className="text-label text-on-surface-variant mb-1">Rata-rata/Sesi</p>
-            <p className="text-title-md text-on-surface font-semibold">{avgPerSession} ml</p>
+            <p className="text-xs text-on-surface-variant mb-0.5">Rata-rata/Sesi</p>
+            <p className="text-lg font-bold text-on-surface">{avgPerSession} ml</p>
           </div>
         </div>
 
         {/* Chart */}
-        <div className="card p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-headline-sm text-on-surface">Grafik Konsumsi</h2>
-            <span className="text-label text-on-surface-variant">Target: {dailyTarget} ml</span>
+        <div className="card p-5 mb-6">
+          <div className="flex justify-between items-center mb-5">
+            <div>
+              <h2 className="text-base font-semibold text-on-surface mb-0.5">Grafik Konsumsi</h2>
+              <p className="text-xs text-on-surface-variant">Target: {dailyTarget} ml</p>
+            </div>
           </div>
 
           {/* Bar Chart */}
