@@ -117,26 +117,26 @@ export default function Insights() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-primary text-lg">local_drink</span>
-              <span className="text-label text-on-surface-variant">Total</span>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="card p-5 bg-gradient-to-br from-primary/10 to-primary/5">
+            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-3">
+              <span className="material-symbols-outlined text-primary">water_drop</span>
             </div>
-            <p className="text-headline text-primary">{totalConsumed}<span className="text-sm ml-1">ml</span></p>
+            <p className="text-label text-on-surface-variant mb-1">Total Konsumsi</p>
+            <p className="text-title-lg text-primary font-semibold">{totalConsumed} ml</p>
           </div>
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-secondary text-lg">show_chart</span>
-              <span className="text-label text-on-surface-variant">Rata-rata</span>
+          <div className="card p-5 bg-gradient-to-br from-secondary/10 to-secondary/5">
+            <div className="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center mb-3">
+              <span className="material-symbols-outlined text-secondary">straighten</span>
             </div>
-            <p className="text-headline text-secondary">{avgDaily}<span className="text-sm ml-1">ml/hari</span></p>
+            <p className="text-label text-on-surface-variant mb-1">Rata-rata Harian</p>
+            <p className="text-title-lg text-secondary font-semibold">{avgDaily} ml</p>
           </div>
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-tertiary text-lg">check_circle</span>
-              <span className="text-label text-on-surface-variant">Target Tercapai</span>
+          <div className="card p-5 bg-gradient-to-br from-tertiary/10 to-tertiary/5">
+            <div className="w-12 h-12 rounded-full bg-tertiary/20 flex items-center justify-center mb-3">
+              <span className="material-symbols-outlined text-tertiary">verified</span>
             </div>
+            <p className="text-label text-on-surface-variant mb-1">Target Tercapai</p>
             <p className="text-headline text-tertiary">{daysTargetMet}<span className="text-sm ml-1">hari</span></p>
           </div>
           <div className="card p-4">

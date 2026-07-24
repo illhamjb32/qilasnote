@@ -135,52 +135,57 @@ export default function History() {
 
       {/* Main Content */}
       <main className="app-content">
-        {/* Chart */}
-        <div className="card p-6 mb-6">
-          <div className="flex justify-between items-end mb-6">
-            <div>
-              <p className="text-label text-on-surface-variant uppercase tracking-wider mb-1">Tren Konsumsi</p>
-              <h2 className="text-headline text-primary">5 Hari Terakhir</h2>
-            </div>
-            <div className="text-right">
-              <span className="text-label text-on-surface-variant">Rata-rata</span>
-              <p className="text-headline text-on-surface">{getWeeklyAverage()}<span className="text-body text-on-surface-variant ml-1">ml</span></p>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="card p-4 bg-gradient-to-br from-primary/10 to-primary/5">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary">local_drink</span>
+              </div>
+              <div>
+                <p className="text-label text-on-surface-variant">Rata-rata</p>
+                <p className="text-title-lg text-primary">{getWeeklyAverage()} ml</p>
+              </div>
             </div>
           </div>
+          <div className="card p-4 bg-gradient-to-br from-tertiary/10 to-tertiary/5">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-tertiary/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-tertiary">trending_up</span>
+              </div>
+              <div>
+                <p className="text-label text-on-surface-variant">Hari Ini</p>
+                <p className="text-title-lg text-tertiary">{getDailyTotal(today)} ml</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          {/* Bar Chart */}
-          <div className="flex items-end justify-between h-32 gap-3 px-2">
-            {last7Days.slice(-5).map((date) => {
+        {/* Chart */}
+        <div className="card p-6 mb-6">
+          <div className="mb-6">
+            <h2 className="text-title-lg text-on-surface mb-1">Tren 7 Hari</h2>
+            <p className="text-label text-on-surface-variant">Konsumsi harian Anda</p>
+          </div>
+
+          <div className="flex items-end justify-between h-40 gap-2">
+            {last7Days.map((date) => {
               const total = getDailyTotal(date);
               const heightPercent = (total / maxTotal) * 100;
               const isToday = date === today;
               return (
                 <div key={date} className="flex-1 flex flex-col items-center gap-2 group">
-                  <div className="w-full bg-primary-container/30 rounded-t-full relative flex items-end overflow-hidden" style={{ height: `${Math.max(heightPercent, 5)}%` }}>
-                    <div className={`w-full rounded-t-full h-full ${isToday ? 'bg-primary-fixed-dim' : 'bg-primary'}`} />
+                  <span className="text-label text-on-surface-variant group-hover:text-primary transition-colors">
+                    {total > 0 ? total : ''}
+                  </span>
+                  <div className="w-full bg-surface-container-highest rounded-lg relative flex items-end overflow-hidden" style={{ height: `${Math.max(heightPercent, 8)}%`, minHeight: '8px' }}>
+                    <div className={`w-full rounded-lg transition-all ${isToday ? 'bg-gradient-to-t from-primary to-primary-container' : 'bg-gradient-to-t from-primary/60 to-primary/40'}`} 
+                         style={{ height: '100%' }} />
                   </div>
-                  <span className={`text-label ${isToday ? 'text-primary font-bold' : 'text-outline group-hover:text-primary'}`}>
-                    {new Date(date).getDate()}
+                  <span className={`text-label ${isToday ? 'text-primary font-semibold' : 'text-on-surface-variant'}`}>
+                    {getDayName(date).slice(0, 3)}
                   </span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Calendar Strip */}
-        <div className="-mx-6 px-6 mb-6">
-          <div className="flex overflow-x-auto hide-scrollbar gap-4 py-2">
-            {last7Days.map((date) => {
-              const isToday = date === today;
-              return (
-                <button
-                  key={date}
-                  className={`flex flex-col items-center justify-center min-w-[64px] h-20 rounded-lg transition-colors ${isToday ? 'bg-primary-container text-on-primary-container ring-2 ring-primary ring-offset-2' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container'}`}
-                >
-                  <span className="text-label opacity-70">{getDayName(date)}</span>
-                  <span className="text-headline-sm">{new Date(date).getDate()}</span>
-                </button>
               );
             })}
           </div>
