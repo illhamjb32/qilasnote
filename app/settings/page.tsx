@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { deleteAllMilkRecords } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export default function Settings() {
   const [dailyTarget, setDailyTarget] = useState(1000);
   const [showToast, setShowToast] = useState(false);

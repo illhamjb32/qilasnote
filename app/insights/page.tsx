@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { MilkRecord } from '@/lib/types';
 import { getMilkRecords } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 interface DayData {
   date: string;
   total: number;

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { MilkRecord } from '@/lib/types';
 import { getMilkRecordsByDate, addMilkRecord } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
   const [totalToday, setTotalToday] = useState(0);
   const [amount, setAmount] = useState('');
