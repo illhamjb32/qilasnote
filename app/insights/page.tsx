@@ -157,36 +157,37 @@ export default function Insights() {
             </div>
           </div>
 
-          {/* Bar Chart */}
-          <div className="space-y-3">
+          {/* Vertical Bar Chart */}
+          <div className="flex items-end justify-between gap-2 h-44 px-1">
             {chartData.map((day) => {
-              const widthPercent = maxTotal > 0 ? (day.total / maxTotal) * 100 : 0;
+              const heightPercent = maxTotal > 0 ? (day.total / maxTotal) * 100 : 0;
               const metTarget = day.total >= dailyTarget;
+              const barHeight = Math.max(heightPercent, day.total > 0 ? 4 : 0);
               return (
-                <div key={day.date} className="flex items-center gap-3">
-                  <div className="w-12 text-xs text-on-surface-variant text-right">
-                    {dateRange <= 14 ? getDayName(day.date) : getDayNumber(day.date)}
-                  </div>
-                  <div className="flex-1 h-8 bg-surface-container rounded-lg relative overflow-hidden">
+                <div key={day.date} className="flex-1 flex flex-col items-center gap-2">
+                  <span className="text-label font-semibold text-on-surface">
+                    {day.total > 0 ? day.total : '-'}
+                  </span>
+                  <div className="w-full relative bg-surface-container rounded-t-lg overflow-hidden" style={{ height: '140px' }}>
                     <div
-                      className="h-full rounded-lg transition-all duration-300"
+                      className="absolute bottom-0 left-0 right-0 rounded-t-lg transition-all duration-300"
                       style={{
-                        width: `${Math.max(widthPercent, day.total > 0 ? 3 : 0)}%`,
+                        height: `${barHeight}%`,
                         background: metTarget
-                          ? 'linear-gradient(to right, #2e6385, #a5d8ff)'
-                          : 'linear-gradient(to right, rgba(46, 99, 133, 0.6), rgba(46, 99, 133, 0.4))'
+                          ? 'linear-gradient(to top, #2e6385, #a5d8ff)'
+                          : 'linear-gradient(to top, rgba(46, 99, 133, 0.6), rgba(46, 99, 133, 0.4))'
                       }}
                     />
-                    {dailyTarget > 0 && (
+                    {day.total > 0 && dailyTarget > 0 && (
                       <div
-                        className="absolute top-0 bottom-0 w-0.5 bg-error"
-                        style={{ left: `${(dailyTarget / maxTotal) * 100}%` }}
+                        className="absolute w-full h-0.5 bg-error z-10"
+                        style={{ bottom: `${(dailyTarget / maxTotal) * 100}%` }}
                       />
                     )}
                   </div>
-                  <div className="w-16 text-sm font-semibold text-on-surface text-right">
-                    {day.total} ml
-                  </div>
+                  <span className="text-xs text-on-surface-variant">
+                    {dateRange <= 14 ? getDayName(day.date) : getDayNumber(day.date)}
+                  </span>
                 </div>
               );
             })}
