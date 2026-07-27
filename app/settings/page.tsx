@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { deleteAllMilkRecords, getUserSettings, updateUserSettings } from '@/lib/db';
+import { getUserSettings, updateUserSettings } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export default function Settings() {
   const [dailyTarget, setDailyTarget] = useState(1000);
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('Berhasil disimpan!');
   const [notificationEnabled, setNotificationEnabled] = useState(true);
   const [reminderInterval, setReminderInterval] = useState('4');
 
@@ -21,6 +22,7 @@ export default function Settings() {
       const settings = await getUserSettings();
       if (settings) {
         setDailyTarget(settings.daily_target);
+        localStorage.setItem('dailyTarget', settings.daily_target.toString());
         setNotificationEnabled(settings.notifications_enabled);
         setReminderInterval(settings.reminder_interval.toString());
       }
@@ -36,6 +38,8 @@ export default function Settings() {
         notifications_enabled: notificationEnabled,
         reminder_interval: parseInt(reminderInterval)
       });
+      localStorage.setItem('dailyTarget', dailyTarget.toString());
+      setToastMessage('Berhasil disimpan!');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 2000);
     } catch (error) {
@@ -52,15 +56,28 @@ export default function Settings() {
     setReminderInterval(value);
   };
 
-  const handleDeleteAllData = async () => {
-    if (confirm('Yakin ingin menghapus semua data? Tindakan ini tidak dapat dibatalkan.')) {
+  const handleClearCache = async () => {
+    if (confirm('Yakin ingin menghapus cache browser? Data yang tersimpan di browser akan dihapus.')) {
       try {
-        await deleteAllMilkRecords();
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // Clear any IndexedDB databases
+        if ('indexedDB' in window) {
+          const databases = await indexedDB.databases();
+          for (const db of databases) {
+            if (db.name) {
+              indexedDB.deleteDatabase(db.name);
+            }
+          }
+        }
+
+        setToastMessage('Cache berhasil dihapus!');
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2000);
       } catch (error) {
-        console.error('Error deleting all data:', error);
-        alert('Gagal menghapus data. Silakan coba lagi.');
+        console.error('Error clearing cache:', error);
+        alert('Gagal menghapus cache. Silakan coba lagi.');
       }
     }
   };
@@ -71,7 +88,7 @@ export default function Settings() {
     <div className="app-container">
       {/* Header */}
       <header className="app-header">
-        <Link href="/">
+        <Link href="/" className="no-underline">
           <button className="w-10 h-10 rounded-full hover:bg-surface-container-high flex items-center justify-center transition-colors">
             <span className="material-symbols-outlined text-on-surface-variant">arrow_back</span>
           </button>
@@ -264,16 +281,16 @@ export default function Settings() {
             </div>
             <div>
               <h2 className="text-headline-sm text-on-surface">Kelola Data</h2>
-              <p className="text-label text-on-surface-variant">Hapus semua data jika diperlukan</p>
+              <p className="text-label text-on-surface-variant">Hapus cache browser untuk membersihkan data sementara</p>
             </div>
           </div>
 
           <button
-            onClick={handleDeleteAllData}
+            onClick={handleClearCache}
             className="btn w-full py-4 bg-error-container text-error hover:bg-error hover:text-on-error"
           >
-            <span className="material-symbols-outlined mr-2">delete_forever</span>
-            Hapus Semua Data
+            <span className="material-symbols-outlined mr-2">cleaning_services</span>
+            Hapus Cache Browser
           </button>
         </div>
       </main>
@@ -282,7 +299,7 @@ export default function Settings() {
       {showToast && (
         <div className="toast">
           <span className="material-symbols-outlined text-on-tertiary-container">check_circle</span>
-          <span className="text-body">Berhasil disimpan!</span>
+          <span className="text-body">{toastMessage}</span>
         </div>
       )}
     </div>

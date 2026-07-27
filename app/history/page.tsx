@@ -1,90 +1,158 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { MilkRecord } from '@/lib/types';
-import { getMilkRecords, getMilkRecordsByDateRange, deleteMilkRecord, updateMilkRecord } from '@/lib/db';
+import { getMilkRecordsByDate, deleteMilkRecord, updateMilkRecord } from '@/lib/db';
 
 // Disable static prerendering - this page uses localStorage which isn't available on server
 export const dynamic = 'force-dynamic';
 
 export default function History() {
-  const [currentFilter, setCurrentFilter] = useState('today');
-  const [groupedData, setGroupedData] = useState<Record<string, MilkRecord[]>>({});
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [records, setRecords] = useState<MilkRecord[]>([]);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editId, setEditId] = useState<number | null>(null);
   const [editAmount, setEditAmount] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [dailyTarget, setDailyTarget] = useState(1000);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const calendarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const savedTarget = localStorage.getItem('dailyTarget');
     if (savedTarget) {
       setDailyTarget(parseInt(savedTarget));
     }
-    loadAndRenderHistory();
-  }, [currentFilter]);
+    loadData();
+  }, [selectedDate]);
 
-  const getTodayString = () => new Date().toISOString().split('T')[0];
+  // Close calendar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+        setShowCalendar(false);
+      }
+    };
 
-  const getWeekStart = () => {
-    const today = new Date();
-    const day = today.getDay();
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-    return new Date(today.setDate(diff)).toISOString().split('T')[0];
-  };
-
-  const getLast7Days = () => {
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      days.push(date.toISOString().split('T')[0]);
+    if (showCalendar) {
+      document.addEventListener('mousedown', handleClickOutside);
     }
-    return days;
-  };
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showCalendar]);
 
-  const filterData = async () => {
-    const today = getTodayString();
-    const weekStart = getWeekStart();
-    
-    if (currentFilter === 'today') {
-      return await getMilkRecordsByDateRange(today);
-    } else if (currentFilter === 'week') {
-      return await getMilkRecordsByDateRange(weekStart);
-    } else {
-      return await getMilkRecords();
-    }
-  };
-
-  const loadAndRenderHistory = async () => {
+  const loadData = async () => {
     try {
-      const data = await filterData();
-      const groups: Record<string, MilkRecord[]> = {};
-      data.forEach(item => {
-        if (!groups[item.date]) groups[item.date] = [];
-        groups[item.date].push(item);
-      });
-      Object.keys(groups).forEach(date => {
-        groups[date].sort((a, b) => b.time.localeCompare(a.time));
-      });
-      setGroupedData(groups);
+      const data = await getMilkRecordsByDate(selectedDate);
+      data.sort((a, b) => b.time.localeCompare(a.time));
+      setRecords(data);
     } catch (error) {
       console.error('Error loading history:', error);
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDateDisplay = (dateString: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+    if (dateString === today) return 'Hari Ini';
+    if (dateString === yesterday) return 'Kemarin';
+
     const date = new Date(dateString);
     const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
     return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]}`;
   };
 
-  const getDayName = (dateString: string) => {
+  const formatDateInput = (dateString: string) => {
+    const date = new Date(dateString);
     const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-    return days[new Date(dateString).getDay()];
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+  };
+
+  const goToPreviousDay = () => {
+    const date = new Date(selectedDate);
+    date.setDate(date.getDate() - 1);
+    setSelectedDate(date.toISOString().split('T')[0]);
+  };
+
+  const goToNextDay = () => {
+    const date = new Date(selectedDate);
+    date.setDate(date.getDate() + 1);
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (date.toISOString().split('T')[0] <= todayStr) {
+      setSelectedDate(date.toISOString().split('T')[0]);
+    }
+  };
+
+  const goToToday = () => {
+    setSelectedDate(new Date().toISOString().split('T')[0]);
+    setCalendarMonth(new Date());
+    setShowCalendar(false);
+  };
+
+  // Calendar functions
+  const getDaysInMonth = (year: number, month: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (year: number, month: number) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  const generateCalendarDays = () => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
+
+    const days: (number | null)[] = [];
+
+    // Empty slots for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      days.push(null);
+    }
+
+    // Days of the month
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(i);
+    }
+
+    return days;
+  };
+
+  const selectDate = (day: number) => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const newDate = new Date(year, month, day);
+    const dateStr = newDate.toISOString().split('T')[0];
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    if (dateStr <= todayStr) {
+      setSelectedDate(dateStr);
+      setShowCalendar(false);
+    }
+  };
+
+  const goToPreviousMonth = () => {
+    const newMonth = new Date(calendarMonth);
+    newMonth.setMonth(newMonth.getMonth() - 1);
+    setCalendarMonth(newMonth);
+  };
+
+  const goToNextMonth = () => {
+    const newMonth = new Date(calendarMonth);
+    newMonth.setMonth(newMonth.getMonth() + 1);
+    const today = new Date();
+    if (newMonth.getFullYear() < today.getFullYear() ||
+        (newMonth.getFullYear() === today.getFullYear() && newMonth.getMonth() <= today.getMonth())) {
+      setCalendarMonth(newMonth);
+    }
   };
 
   const handleDelete = async () => {
@@ -92,7 +160,7 @@ export default function History() {
       try {
         await deleteMilkRecord(deleteId);
         setDeleteId(null);
-        await loadAndRenderHistory();
+        await loadData();
         setToastMessage('Data berhasil dihapus!');
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2000);
@@ -119,7 +187,7 @@ export default function History() {
         await updateMilkRecord(editId, { amount });
         setEditId(null);
         setEditAmount('');
-        await loadAndRenderHistory();
+        await loadData();
         setToastMessage('Data berhasil diupdate!');
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2000);
@@ -130,23 +198,30 @@ export default function History() {
     }
   };
 
-  const getDailyTotal = (date: string) => {
-    return groupedData[date]?.reduce((sum, item) => sum + item.amount, 0) || 0;
+  const getDailyTotal = () => {
+    return records.reduce((sum, item) => sum + item.amount, 0);
   };
 
-  const sortedDates = Object.keys(groupedData).sort().reverse();
-  const today = getTodayString();
+  const maxAmount = records.length > 0 ? Math.max(...records.map(i => i.amount), dailyTarget) : dailyTarget;
+  const totalAmount = getDailyTotal();
+  const progressPercent = Math.min((totalAmount / dailyTarget) * 100, 100);
+
+  const today = new Date().toISOString().split('T')[0];
+  const isToday = selectedDate === today;
+
+  const calendarDays = generateCalendarDays();
+  const weekDays = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
   return (
     <div className="app-container">
       <header className="app-header">
-        <Link href="/">
+        <Link href="/" className="no-underline">
           <button className="w-10 h-10 rounded-full hover:bg-surface-container-high flex items-center justify-center transition-colors">
             <span className="material-symbols-outlined text-on-surface-variant">arrow_back</span>
           </button>
         </Link>
         <h1 className="text-headline-sm text-primary font-quicksand">Riwayat Minum</h1>
-        <Link href="/settings">
+        <Link href="/settings" className="no-underline">
           <button className="w-10 h-10 rounded-full hover:bg-surface-container-high flex items-center justify-center transition-colors">
             <span className="material-symbols-outlined text-on-surface-variant">settings</span>
           </button>
@@ -154,109 +229,235 @@ export default function History() {
       </header>
 
       <main className="app-content">
-
-        {/* Filter Tabs */}
-        <div className="flex gap-3 mb-6">
-          {[
-            { filter: 'today', label: 'Hari Ini' },
-            { filter: 'week', label: 'Minggu Ini' },
-            { filter: 'all', label: 'Semua' }
-          ].map(({ filter, label }) => (
+        {/* Date Selector */}
+        <div className="card p-4 mb-6">
+          <div className="flex items-center justify-between gap-2">
             <button
-              key={filter}
-              onClick={() => setCurrentFilter(filter)}
-              className={`flex-1 py-3 rounded-full font-semibold text-label transition-all ${currentFilter === filter ? 'btn-chip active' : 'btn-chip'}`}
+              onClick={goToPreviousDay}
+              className="w-10 h-10 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center transition-colors"
             >
-              {label}
+              <span className="material-symbols-outlined text-on-surface-variant">chevron_left</span>
             </button>
-          ))}
-        </div>
 
-        {/* History List */}
-        <div className="space-y-4">
-          {sortedDates.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="material-symbols-outlined text-on-surface-variant text-4xl">history</span>
+            <button
+              onClick={() => setShowCalendar(!showCalendar)}
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors"
+            >
+              <span className="material-symbols-outlined text-primary">calendar_month</span>
+              <div className="text-center">
+                <span className="text-body font-semibold text-on-surface block">{formatDateDisplay(selectedDate)}</span>
+                <span className="text-label text-on-surface-variant">{formatDateInput(selectedDate)}</span>
               </div>
-              <p className="text-body text-on-surface-variant">Belum ada data</p>
-              <p className="text-label text-outline mt-1">Mulai catat minum susu Qila</p>
-            </div>
-          ) : (
-            sortedDates.map(date => {
-              const items = groupedData[date];
-              const total = items.reduce((sum, item) => sum + item.amount, 0);
-              const maxAmount = Math.max(...items.map(i => i.amount), dailyTarget);
-              return (
-                <div key={date} className="mb-5">
-                  <div className="flex justify-between items-center mb-2.5 px-0.5">
-                    <h3 className="text-sm font-semibold text-on-surface">{formatDate(date)}</h3>
-                    <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-medium">{total} ml</span>
-                  </div>
+            </button>
 
-                  <div className="card p-4 mb-3">
-                    <div className="space-y-2">
-                      {items.map(item => {
-                        const widthPercent = (item.amount / maxAmount) * 100;
-                        const hour = parseInt(item.time.split(':')[0]);
-                        return (
-                          <div key={item.id} className="flex items-center gap-3">
-                            <div className="w-14 text-xs text-on-surface-variant text-right">
-                              {item.time}
-                            </div>
-                            <div className="flex-1 h-6 bg-surface-container rounded-lg relative overflow-hidden">
-                              <div
-                                className="h-full rounded-lg transition-all duration-300"
-                                style={{
-                                  width: `${Math.max(widthPercent, 3)}%`,
-                                  background: 'linear-gradient(to right, #2e6385, #a5d8ff)'
-                                }}
-                              />
-                            </div>
-                            <div className="w-16 text-sm font-semibold text-on-surface text-right">
-                              {item.amount} ml
-                            </div>
-                          </div>
-                        );
-                      })}
+            <button
+              onClick={goToNextDay}
+              disabled={isToday}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                isToday
+                  ? 'bg-surface-container/50 cursor-not-allowed'
+                  : 'bg-surface-container hover:bg-surface-container-high'
+              }`}
+            >
+              <span className={`material-symbols-outlined ${isToday ? 'text-outline' : 'text-on-surface-variant'}`}>chevron_right</span>
+            </button>
+          </div>
+
+          {/* Custom Calendar Dropdown */}
+          {showCalendar && (
+            <div ref={calendarRef} className="mt-4 pt-4 border-t border-outline-variant">
+              {/* Calendar Header */}
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  onClick={goToPreviousMonth}
+                  className="w-10 h-10 rounded-full hover:bg-surface-container-high flex items-center justify-center transition-colors"
+                >
+                  <span className="material-symbols-outlined text-on-surface-variant">chevron_left</span>
+                </button>
+                <span className="text-body font-semibold text-on-surface">
+                  {calendarMonth.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
+                </span>
+                <button
+                  onClick={goToNextMonth}
+                  className="w-10 h-10 rounded-full hover:bg-surface-container-high flex items-center justify-center transition-colors"
+                >
+                  <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+                </button>
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="mb-3">
+                {/* Week day headers */}
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                  {weekDays.map(day => (
+                    <div key={day} className="text-center text-xs text-on-surface-variant font-medium py-1">
+                      {day}
                     </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    {items.map(item => (
-                      <div
-                        key={item.id}
-                        className="card p-3.5 flex items-center justify-between hover:shadow-md transition-all"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
-                            <span className="material-symbols-outlined text-lg">water_drop</span>
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-on-surface leading-tight">{item.amount} ml</p>
-                            <p className="text-xs text-on-surface-variant leading-tight mt-0.5">{item.time}</p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleEdit(item)}
-                          className="text-primary p-2 hover:bg-primary/10 rounded-full transition-all"
-                        >
-                          <span className="material-symbols-outlined text-lg">edit</span>
-                        </button>
-                        <button
-                          onClick={() => setDeleteId(item.id)}
-                          className="text-error p-2 hover:bg-error/10 rounded-full transition-all"
-                        >
-                          <span className="material-symbols-outlined text-lg">delete</span>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                  ))}
                 </div>
-              );
-            })
+
+                {/* Day buttons */}
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarDays.map((day, index) => {
+                    if (day === null) {
+                      return <div key={`empty-${index}`} className="aspect-square" />;
+                    }
+
+                    const dayDate = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), day);
+                    const dayDateStr = dayDate.toISOString().split('T')[0];
+                    const isSelected = dayDateStr === selectedDate;
+                    const isFuture = dayDateStr > today;
+                    const isSunday = dayDate.getDay() === 0;
+
+                    return (
+                      <button
+                        key={day}
+                        onClick={() => !isFuture && selectDate(day)}
+                        disabled={isFuture}
+                        className={`
+                          aspect-square rounded-lg flex items-center justify-center text-sm font-medium transition-all
+                          ${isSelected
+                            ? 'bg-primary text-on-primary'
+                            : isFuture
+                              ? 'text-outline cursor-not-allowed'
+                              : isSunday
+                                ? 'text-error/70 hover:bg-error/10'
+                                : 'text-on-surface hover:bg-surface-container-high'
+                          }
+                        `}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="flex gap-2">
+                {!isToday && (
+                  <button
+                    onClick={goToToday}
+                    className="flex-1 py-3 bg-secondary-container text-on-secondary-container rounded-xl font-semibold text-center hover:bg-secondary-container/80 transition-colors"
+                  >
+                    Hari Ini
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowCalendar(false)}
+                  className="flex-1 py-3 bg-surface-container text-on-surface rounded-xl font-semibold text-center hover:bg-surface-container-high transition-colors"
+                >
+                  Tutup
+                </button>
+              </div>
+            </div>
           )}
         </div>
+
+        {/* Daily Summary */}
+        <div className="card p-6 mb-6">
+          <div className="text-center mb-4">
+            <p className="text-label text-on-surface-variant mb-1">Total {formatDateDisplay(selectedDate)}</p>
+            <p className="text-display text-primary">{totalAmount} <span className="text-headline text-on-surface-variant">ml</span></p>
+          </div>
+
+          <div className="relative h-3 bg-surface-container rounded-full overflow-hidden mb-3">
+            <div
+              className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${progressPercent}%`,
+                background: progressPercent >= 100
+                  ? 'linear-gradient(to right, #4caf50, #8bc34a)'
+                  : 'linear-gradient(to right, #2e6385, #a5d8ff)'
+              }}
+            />
+          </div>
+
+          <div className="flex justify-between text-xs">
+            <span className="text-outline">0 ml</span>
+            <span className={`font-semibold ${progressPercent >= 100 ? 'text-green-600' : 'text-primary'}`}>
+              {progressPercent.toFixed(0)}% dari target
+            </span>
+            <span className="text-outline">{dailyTarget} ml</span>
+          </div>
+        </div>
+
+        {/* Records List */}
+        {records.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-on-surface-variant text-4xl">water_drop</span>
+            </div>
+            <p className="text-body text-on-surface-variant">Belum ada data</p>
+            <p className="text-label text-outline mt-1">
+              {isToday ? 'Mulai catat minum susu Qila' : 'Tidak ada data untuk tanggal ini'}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {/* Chart Bar */}
+            <div className="card p-4 mb-4">
+              <p className="text-label text-on-surface-variant mb-3">Grafik Minum {formatDateDisplay(selectedDate)}</p>
+              <div className="space-y-2">
+                {records.map(item => {
+                  const widthPercent = (item.amount / maxAmount) * 100;
+                  return (
+                    <div key={item.id} className="flex items-center gap-3">
+                      <div className="w-14 text-xs text-on-surface-variant text-right">
+                        {item.time}
+                      </div>
+                      <div className="flex-1 h-6 bg-surface-container rounded-lg relative overflow-hidden">
+                        <div
+                          className="h-full rounded-lg transition-all duration-300"
+                          style={{
+                            width: `${Math.max(widthPercent, 5)}%`,
+                            background: 'linear-gradient(to right, #2e6385, #a5d8ff)'
+                          }}
+                        />
+                      </div>
+                      <div className="w-16 text-sm font-semibold text-on-surface text-right">
+                        {item.amount} ml
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Record Cards */}
+            <p className="text-label text-on-surface-variant mb-2">Detail Minum</p>
+            {records.map(item => (
+              <div
+                key={item.id}
+                className="card p-4 flex items-center justify-between hover:shadow-md transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                    <span className="material-symbols-outlined text-xl">water_drop</span>
+                  </div>
+                  <div>
+                    <p className="text-body font-semibold text-on-surface">{item.amount} ml</p>
+                    <p className="text-label text-on-surface-variant">{item.time}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleEdit(item)}
+                    className="text-primary p-2 hover:bg-primary/10 rounded-full transition-all"
+                  >
+                    <span className="material-symbols-outlined text-xl">edit</span>
+                  </button>
+                  <button
+                    onClick={() => setDeleteId(item.id)}
+                    className="text-error p-2 hover:bg-error/10 rounded-full transition-all"
+                  >
+                    <span className="material-symbols-outlined text-xl">delete</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
 
       {/* Bottom Navigation */}

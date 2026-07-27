@@ -452,6 +452,7 @@ select {
 }
 
 /* Utility Classes */
+.no-underline { text-decoration: none; }
 .text-primary { color: var(--primary); }
 .text-on-primary { color: var(--on-primary); }
 .text-on-primary-container { color: var(--on-primary-container); }

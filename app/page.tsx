@@ -34,6 +34,7 @@ export default function Home() {
       const settings = await getUserSettings();
       if (settings) {
         setDailyTarget(settings.daily_target);
+        localStorage.setItem('dailyTarget', settings.daily_target.toString());
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -97,7 +98,7 @@ export default function Home() {
           </div>
           <h1 className="text-headline-sm text-primary font-quicksand">Qila&apos;s Note</h1>
         </div>
-        <Link href="/settings">
+        <Link href="/settings" className="no-underline">
           <button className="w-10 h-10 rounded-full hover:bg-surface-container-high flex items-center justify-center transition-colors">
             <span className="material-symbols-outlined text-on-surface-variant">settings</span>
           </button>
@@ -272,7 +273,7 @@ export default function Home() {
       </main>
 
       {/* FAB */}
-      <Link href="/history">
+      <Link href="/history" className="no-underline">
         <button className="fab">
           <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'wght' 600" }}>add</span>
         </button>
