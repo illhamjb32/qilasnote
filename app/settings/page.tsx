@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export default function Settings() {
   const [dailyTarget, setDailyTarget] = useState(1000);
+  const [dailyTargetMpasi, setDailyTargetMpasi] = useState(500);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('Berhasil disimpan!');
   const [notificationEnabled, setNotificationEnabled] = useState(true);
@@ -22,7 +23,9 @@ export default function Settings() {
       const settings = await getUserSettings();
       if (settings) {
         setDailyTarget(settings.daily_target);
+        setDailyTargetMpasi(settings.daily_target_mpasi || 500);
         localStorage.setItem('dailyTarget', settings.daily_target.toString());
+        localStorage.setItem('dailyTargetMpasi', (settings.daily_target_mpasi || 500).toString());
         setNotificationEnabled(settings.notifications_enabled);
         setReminderInterval(settings.reminder_interval.toString());
       }
@@ -35,10 +38,12 @@ export default function Settings() {
     try {
       await updateUserSettings({
         daily_target: dailyTarget,
+        daily_target_mpasi: dailyTargetMpasi,
         notifications_enabled: notificationEnabled,
         reminder_interval: parseInt(reminderInterval)
       });
       localStorage.setItem('dailyTarget', dailyTarget.toString());
+      localStorage.setItem('dailyTargetMpasi', dailyTargetMpasi.toString());
       setToastMessage('Berhasil disimpan!');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 2000);
@@ -82,7 +87,8 @@ export default function Settings() {
     }
   };
 
-  const presetTargets = [500, 600, 800, 1000, 1200, 1500];
+  const presetTargetsSusu = [500, 600, 800, 1000, 1200, 1500];
+  const presetTargetsMpasi = [200, 300, 400, 500, 600, 800];
 
   return (
     <div className="app-container">
@@ -99,14 +105,14 @@ export default function Settings() {
 
       {/* Main Content */}
       <main className="app-content">
-        {/* Target Section */}
+        {/* Target Susu Section */}
         <div className="card p-6 mb-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center">
-              <span className="material-symbols-outlined text-primary">track_changes</span>
+              <span className="material-symbols-outlined text-primary">local_drink</span>
             </div>
             <div>
-              <h2 className="text-headline-sm text-on-surface">Target Harian</h2>
+              <h2 className="text-headline-sm text-on-surface">Target Susu Harian</h2>
               <p className="text-label text-on-surface-variant">Atur batas pencapaian minum susu</p>
             </div>
           </div>
@@ -121,7 +127,7 @@ export default function Settings() {
           <div className="mb-6">
             <p className="text-label text-on-surface-variant mb-3">Pilih Target Cepat</p>
             <div className="grid grid-cols-3 gap-2">
-              {presetTargets.map((target) => (
+              {presetTargetsSusu.map((target) => (
                 <button
                   key={target}
                   onClick={() => setDailyTarget(target)}
@@ -175,6 +181,89 @@ export default function Settings() {
               <button
                 onClick={handleSave}
                 className="btn btn-primary px-6"
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Target MPASI Section */}
+        <div className="card p-6 mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center">
+              <span className="material-symbols-outlined text-secondary">restaurant</span>
+            </div>
+            <div>
+              <h2 className="text-headline-sm text-on-surface">Target MPASI Harian</h2>
+              <p className="text-label text-on-surface-variant">Atur batas pencapaian makan MPASI</p>
+            </div>
+          </div>
+
+          {/* Current Target Display */}
+          <div className="bg-secondary-container/30 rounded-xl p-6 mb-6 text-center">
+            <p className="text-label text-on-surface-variant mb-1">Target Saat Ini</p>
+            <p className="text-display text-secondary">{dailyTargetMpasi} <span className="text-headline text-on-surface-variant">ml/gr</span></p>
+          </div>
+
+          {/* Preset Buttons */}
+          <div className="mb-6">
+            <p className="text-label text-on-surface-variant mb-3">Pilih Target Cepat</p>
+            <div className="grid grid-cols-3 gap-2">
+              {presetTargetsMpasi.map((target) => (
+                <button
+                  key={target}
+                  onClick={() => setDailyTargetMpasi(target)}
+                  className={`py-3 rounded-xl text-label transition-all ${
+                    dailyTargetMpasi === target
+                      ? 'bg-secondary text-on-secondary'
+                      : 'bg-surface-container text-on-surface hover:bg-surface-container-high'
+                  }`}
+                >
+                  {target}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Range Slider */}
+          <div className="mb-6">
+            <label className="text-label text-on-surface-variant mb-2 block">Atur dengan Slider</label>
+            <input
+              type="range"
+              value={dailyTargetMpasi}
+              onChange={(e) => setDailyTargetMpasi(parseInt(e.target.value))}
+              min="50"
+              max="1000"
+              step="10"
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-outline mt-1">
+              <span>50</span>
+              <span className="text-secondary font-semibold">{dailyTargetMpasi} ml/gr</span>
+              <span>1000</span>
+            </div>
+          </div>
+
+          {/* Custom Input */}
+          <div>
+            <label className="text-label text-on-surface-variant mb-2 block">Atur Manual</label>
+            <div className="flex gap-3">
+              <div className="flex-1 relative">
+                <input
+                  type="number"
+                  value={dailyTargetMpasi}
+                  onChange={(e) => setDailyTargetMpasi(Math.max(50, Math.min(2000, parseInt(e.target.value) || 50)))}
+                  className="input pr-16"
+                  min="50"
+                  max="2000"
+                  step="10"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-label">ml/gr</span>
+              </div>
+              <button
+                onClick={handleSave}
+                className="btn btn-secondary px-6"
               >
                 Simpan
               </button>
@@ -268,7 +357,7 @@ export default function Settings() {
             </div>
             <div className="flex justify-between p-3 bg-surface-container rounded-xl">
               <span className="text-on-surface-variant">Tipe</span>
-              <span className="text-on-surface font-semibold text-right">Pencatat Minum Susu Bayi</span>
+              <span className="text-on-surface font-semibold text-right">Pencatat Susu & MPASI Bayi</span>
             </div>
           </div>
         </div>

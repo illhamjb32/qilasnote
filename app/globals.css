@@ -177,12 +177,21 @@ body {
 }
 
 .btn-secondary {
-  background-color: var(--surface-container);
-  color: var(--on-surface);
+  background-color: var(--secondary);
+  color: var(--on-secondary);
 }
 
 .btn-secondary:hover {
-  background-color: var(--surface-container-high);
+  background-color: #6a4b52;
+}
+
+.btn-tertiary {
+  background-color: var(--tertiary);
+  color: var(--on-tertiary);
+}
+
+.btn-tertiary:hover {
+  background-color: #5a5330;
 }
 
 .btn-chip {
@@ -459,16 +468,20 @@ select {
 .text-secondary { color: var(--secondary); }
 .text-on-secondary { color: var(--on-secondary); }
 .text-on-secondary-container { color: var(--on-secondary-container); }
+.text-on-secondary { color: var(--on-secondary); }
 .text-on-surface { color: var(--on-surface); }
 .text-on-surface-variant { color: var(--on-surface-variant); }
 .text-on-tertiary-container { color: var(--on-tertiary-container); }
 .text-outline { color: var(--outline); }
 .text-error { color: var(--error); }
 .text-on-error { color: var(--on-error); }
+.text-tertiary { color: var(--tertiary); }
+.text-green-600 { color: #16a34a; }
 
 .bg-background { background-color: var(--background); }
 .bg-primary { background-color: var(--primary); }
 .bg-primary-container { background-color: var(--primary-container); }
+.bg-secondary { background-color: var(--secondary); }
 .bg-secondary-container { background-color: var(--secondary-container); }
 .bg-surface { background-color: var(--surface); }
 .bg-surface-container { background-color: var(--surface-container); }
@@ -476,11 +489,21 @@ select {
 .bg-surface-container-lowest { background-color: var(--surface-container-lowest); }
 .bg-surface-container-high { background-color: var(--surface-container-high); }
 .bg-tertiary-container { background-color: var(--tertiary-container); }
+.bg-tertiary-container\/50 { background-color: rgba(221, 210, 160, 0.5); }
+.bg-tertiary-container\/20 { background-color: rgba(221, 210, 160, 0.2); }
 .bg-error { background-color: var(--error); }
+.bg-error\/10 { background-color: rgba(186, 26, 26, 0.1); }
+.bg-primary\/10 { background-color: rgba(46, 99, 133, 0.1); }
+.bg-on-secondary-container { background-color: var(--on-secondary-container); }
+.bg-secondary-container\/30 { background-color: rgba(255, 209, 220, 0.3); }
+.bg-secondary\/10 { background-color: rgba(120, 85, 94, 0.1); }
 
 .border-primary { border-color: var(--primary); }
 .border-primary\/40 { border-color: rgba(46, 99, 133, 0.4); }
 .border-primary-container\/30 { border-color: rgba(165, 216, 255, 0.3); }
+.border-secondary { border-color: var(--secondary); }
+.border-secondary\/40 { border-color: rgba(120, 85, 94, 0.4); }
+.border-secondary-container\/30 { border-color: rgba(255, 209, 220, 0.3); }
 
 .ring-2 { box-shadow: 0 0 0 2px; }
 .ring-primary { --tw-ring-color: var(--primary); }
@@ -535,6 +558,10 @@ select {
 .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
 .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
 .pr-12 { padding-right: 3rem; }
+.pr-16 { padding-right: 4rem; }
+.px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+.px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
 
 /* Margin */
 .mb-1 { margin-bottom: 0.25rem; }
@@ -579,6 +606,7 @@ select {
 .h-20 { height: 5rem; }
 .min-h-screen { min-height: 100vh; }
 .min-h-\[56px\] { min-height: 3.5rem; }
+.min-h-\[80px\] { min-height: 5rem; }
 
 /* Border Radius */
 .rounded-lg { border-radius: 0.5rem; }
@@ -706,3 +734,46 @@ select {
 /* Circle progress */
 .-rotate-90 { transform: rotate(-90deg); }
 .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+
+/* Gradient utilities */
+.bg-gradient-to-br { background-image: linear-gradient(to bottom right, var(--tw-gradient-stops)); }
+.from-primary\/10 { --tw-gradient-from: rgba(46, 99, 133, 0.1); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.from-primary\/5 { --tw-gradient-from: rgba(46, 99, 133, 0.05); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.from-secondary\/10 { --tw-gradient-from: rgba(120, 85, 94, 0.1); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.from-secondary\/5 { --tw-gradient-from: rgba(120, 85, 94, 0.05); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.from-tertiary\/10 { --tw-gradient-from: rgba(102, 95, 54, 0.1); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.from-tertiary\/5 { --tw-gradient-from: rgba(102, 95, 54, 0.05); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.from-surface-container\/50 { --tw-gradient-from: rgba(238, 238, 238, 0.5); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.from-surface-container\/30 { --tw-gradient-from: rgba(238, 238, 238, 0.3); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.to-primary { --tw-gradient-to: rgb(46 99 133); }
+.to-primary\/5 { --tw-gradient-to: rgba(46, 99, 133, 0.05); }
+.to-secondary { --tw-gradient-to: rgb(120 85 94); }
+.to-secondary\/5 { --tw-gradient-to: rgba(120, 85, 94, 0.05); }
+.to-tertiary { --tw-gradient-to: rgb(102 95 54); }
+.to-tertiary\/5 { --tw-gradient-to: rgba(102, 95, 54, 0.05); }
+
+/* Additional text colors */
+.text-primary\/10 { color: rgba(46, 99, 133, 0.1); }
+.text-secondary\/10 { color: rgba(120, 85, 94, 0.1); }
+
+/* Additional hover utilities */
+.hover\:bg-primary\/10:hover { background-color: rgba(46, 99, 133, 0.1); }
+.hover\:bg-secondary\/10:hover { background-color: rgba(120, 85, 94, 0.1); }
+.hover\:bg-error\/10:hover { background-color: rgba(186, 26, 26, 0.1); }
+.hover\:bg-secondary-container\/80:hover { background-color: rgba(255, 209, 220, 0.8); }
+.hover\:bg-surface-container-high:hover { background-color: var(--surface-container-high); }
+.hover\:shadow-md:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+.shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+
+/* Aspect ratio for calendar */
+.aspect-square { aspect-ratio: 1 / 1; }
+.aspect-square { width: 100%; height: 100%; }
+
+/* Resize */
+.resize-none { resize: none; }
+
+/* Textarea */
+textarea.input {
+  font-family: inherit;
+  min-height: 80px;
+}

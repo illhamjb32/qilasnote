@@ -2,32 +2,39 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { MilkRecord } from '@/lib/types';
-import { getMilkRecordsByDate, deleteMilkRecord, updateMilkRecord } from '@/lib/db';
+import { MilkRecord, MpasiRecord, RecordType } from '@/lib/types';
+import { getMilkRecordsByDate, deleteMilkRecord, updateMilkRecord, getMpasiRecordsByDate, deleteMpasiRecord, updateMpasiRecord } from '@/lib/db';
 
 // Disable static prerendering - this page uses localStorage which isn't available on server
 export const dynamic = 'force-dynamic';
 
 export default function History() {
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [recordType, setRecordType] = useState<RecordType>('susu');
   const [records, setRecords] = useState<MilkRecord[]>([]);
+  const [recordsMpasi, setRecordsMpasi] = useState<MpasiRecord[]>([]);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editId, setEditId] = useState<number | null>(null);
   const [editAmount, setEditAmount] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [dailyTarget, setDailyTarget] = useState(1000);
+  const [dailyTargetMpasi, setDailyTargetMpasi] = useState(500);
   const [showCalendar, setShowCalendar] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const calendarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const savedTarget = localStorage.getItem('dailyTarget');
+    const savedTargetMpasi = localStorage.getItem('dailyTargetMpasi');
     if (savedTarget) {
       setDailyTarget(parseInt(savedTarget));
     }
+    if (savedTargetMpasi) {
+      setDailyTargetMpasi(parseInt(savedTargetMpasi));
+    }
     loadData();
-  }, [selectedDate]);
+  }, [selectedDate, recordType]);
 
   // Close calendar when clicking outside
   useEffect(() => {
@@ -47,9 +54,15 @@ export default function History() {
 
   const loadData = async () => {
     try {
-      const data = await getMilkRecordsByDate(selectedDate);
-      data.sort((a, b) => b.time.localeCompare(a.time));
-      setRecords(data);
+      if (recordType === 'susu') {
+        const data = await getMilkRecordsByDate(selectedDate);
+        data.sort((a, b) => b.time.localeCompare(a.time));
+        setRecords(data);
+      } else {
+        const data = await getMpasiRecordsByDate(selectedDate);
+        data.sort((a, b) => b.time.localeCompare(a.time));
+        setRecordsMpasi(data);
+      }
     } catch (error) {
       console.error('Error loading history:', error);
     }
@@ -158,7 +171,11 @@ export default function History() {
   const handleDelete = async () => {
     if (deleteId !== null) {
       try {
-        await deleteMilkRecord(deleteId);
+        if (recordType === 'susu') {
+          await deleteMilkRecord(deleteId);
+        } else {
+          await deleteMpasiRecord(deleteId);
+        }
         setDeleteId(null);
         await loadData();
         setToastMessage('Data berhasil dihapus!');
@@ -171,7 +188,7 @@ export default function History() {
     }
   };
 
-  const handleEdit = (record: MilkRecord) => {
+  const handleEdit = (record: MilkRecord | MpasiRecord) => {
     setEditId(record.id);
     setEditAmount(record.amount.toString());
   };
@@ -184,7 +201,11 @@ export default function History() {
           alert('Jumlah harus berupa angka positif');
           return;
         }
-        await updateMilkRecord(editId, { amount });
+        if (recordType === 'susu') {
+          await updateMilkRecord(editId, { amount });
+        } else {
+          await updateMpasiRecord(editId, { amount });
+        }
         setEditId(null);
         setEditAmount('');
         await loadData();
@@ -199,12 +220,18 @@ export default function History() {
   };
 
   const getDailyTotal = () => {
-    return records.reduce((sum, item) => sum + item.amount, 0);
+    if (recordType === 'susu') {
+      return records.reduce((sum, item) => sum + item.amount, 0);
+    } else {
+      return recordsMpasi.reduce((sum, item) => sum + item.amount, 0);
+    }
   };
 
-  const maxAmount = records.length > 0 ? Math.max(...records.map(i => i.amount), dailyTarget) : dailyTarget;
+  const currentTarget = recordType === 'susu' ? dailyTarget : dailyTargetMpasi;
+  const currentRecords = recordType === 'susu' ? records : recordsMpasi;
+  const maxAmount = currentRecords.length > 0 ? Math.max(...currentRecords.map(i => i.amount), currentTarget) : currentTarget;
   const totalAmount = getDailyTotal();
-  const progressPercent = Math.min((totalAmount / dailyTarget) * 100, 100);
+  const progressPercent = Math.min((totalAmount / currentTarget) * 100, 100);
 
   const today = new Date().toISOString().split('T')[0];
   const isToday = selectedDate === today;
@@ -220,7 +247,7 @@ export default function History() {
             <span className="material-symbols-outlined text-on-surface-variant">arrow_back</span>
           </button>
         </Link>
-        <h1 className="text-headline-sm text-primary font-quicksand">Riwayat Minum</h1>
+        <h1 className="text-headline-sm text-primary font-quicksand">Riwayat</h1>
         <Link href="/settings" className="no-underline">
           <button className="w-10 h-10 rounded-full hover:bg-surface-container-high flex items-center justify-center transition-colors">
             <span className="material-symbols-outlined text-on-surface-variant">settings</span>
@@ -229,6 +256,36 @@ export default function History() {
       </header>
 
       <main className="app-content">
+        {/* Record Type Toggle */}
+        <div className="mb-6">
+          <div className="flex bg-surface-container rounded-full p-1">
+            <button
+              type="button"
+              onClick={() => setRecordType('susu')}
+              className={`flex-1 py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-all ${
+                recordType === 'susu'
+                  ? 'bg-primary text-on-primary shadow-sm'
+                  : 'text-on-surface-variant hover:bg-surface-container-high'
+              }`}
+            >
+              <span className="material-symbols-outlined">{recordType === 'susu' ? 'local_drink' : 'local_drink'}</span>
+              <span className="text-label font-medium">Susu</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRecordType('mpasi')}
+              className={`flex-1 py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-all ${
+                recordType === 'mpasi'
+                  ? 'bg-primary text-on-primary shadow-sm'
+                  : 'text-on-surface-variant hover:bg-surface-container-high'
+              }`}
+            >
+              <span className="material-symbols-outlined">restaurant</span>
+              <span className="text-label font-medium">MPASI</span>
+            </button>
+          </div>
+        </div>
+
         {/* Date Selector */}
         <div className="card p-4 mb-6">
           <div className="flex items-center justify-between gap-2">
@@ -358,7 +415,7 @@ export default function History() {
         <div className="card p-6 mb-6">
           <div className="text-center mb-4">
             <p className="text-label text-on-surface-variant mb-1">Total {formatDateDisplay(selectedDate)}</p>
-            <p className="text-display text-primary">{totalAmount} <span className="text-headline text-on-surface-variant">ml</span></p>
+            <p className="text-display text-primary">{totalAmount} <span className="text-headline text-on-surface-variant">{recordType === 'susu' ? 'ml' : 'ml/gr'}</span></p>
           </div>
 
           <div className="relative h-3 bg-surface-container rounded-full overflow-hidden mb-3">
@@ -368,39 +425,44 @@ export default function History() {
                 width: `${progressPercent}%`,
                 background: progressPercent >= 100
                   ? 'linear-gradient(to right, #4caf50, #8bc34a)'
-                  : 'linear-gradient(to right, #2e6385, #a5d8ff)'
+                  : recordType === 'susu'
+                    ? 'linear-gradient(to right, #2e6385, #a5d8ff)'
+                    : 'linear-gradient(to right, #6d4c41, #ffab91)'
               }}
             />
           </div>
 
           <div className="flex justify-between text-xs">
-            <span className="text-outline">0 ml</span>
+            <span className="text-outline">0 {recordType === 'susu' ? 'ml' : ''}</span>
             <span className={`font-semibold ${progressPercent >= 100 ? 'text-green-600' : 'text-primary'}`}>
               {progressPercent.toFixed(0)}% dari target
             </span>
-            <span className="text-outline">{dailyTarget} ml</span>
+            <span className="text-outline">{currentTarget} {recordType === 'susu' ? 'ml' : 'ml/gr'}</span>
           </div>
         </div>
 
         {/* Records List */}
-        {records.length === 0 ? (
+        {currentRecords.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="material-symbols-outlined text-on-surface-variant text-4xl">water_drop</span>
+              <span className={`material-symbols-outlined text-on-surface-variant text-4xl`}>
+                {recordType === 'susu' ? 'local_drink' : 'restaurant'}
+              </span>
             </div>
             <p className="text-body text-on-surface-variant">Belum ada data</p>
             <p className="text-label text-outline mt-1">
-              {isToday ? 'Mulai catat minum susu Qila' : 'Tidak ada data untuk tanggal ini'}
+              {isToday ? `Mulai catat ${recordType === 'susu' ? 'minum susu' : 'MPASI'} Qila` : 'Tidak ada data untuk tanggal ini'}
             </p>
           </div>
         ) : (
           <div className="space-y-3">
             {/* Chart Bar */}
             <div className="card p-4 mb-4">
-              <p className="text-label text-on-surface-variant mb-3">Grafik Minum {formatDateDisplay(selectedDate)}</p>
+              <p className="text-label text-on-surface-variant mb-3">Grafik {recordType === 'susu' ? 'Minum Susu' : 'MPASI'} {formatDateDisplay(selectedDate)}</p>
               <div className="space-y-2">
-                {records.map(item => {
+                {currentRecords.map(item => {
                   const widthPercent = (item.amount / maxAmount) * 100;
+                  const itemUnit = recordType === 'susu' ? 'ml' : (item as MpasiRecord).unit;
                   return (
                     <div key={item.id} className="flex items-center gap-3">
                       <div className="w-14 text-xs text-on-surface-variant text-right">
@@ -411,12 +473,14 @@ export default function History() {
                           className="h-full rounded-lg transition-all duration-300"
                           style={{
                             width: `${Math.max(widthPercent, 5)}%`,
-                            background: 'linear-gradient(to right, #2e6385, #a5d8ff)'
+                            background: recordType === 'susu'
+                              ? 'linear-gradient(to right, #2e6385, #a5d8ff)'
+                              : 'linear-gradient(to right, #6d4c41, #ffab91)'
                           }}
                         />
                       </div>
                       <div className="w-16 text-sm font-semibold text-on-surface text-right">
-                        {item.amount} ml
+                        {item.amount} {itemUnit}
                       </div>
                     </div>
                   );
@@ -425,37 +489,40 @@ export default function History() {
             </div>
 
             {/* Record Cards */}
-            <p className="text-label text-on-surface-variant mb-2">Detail Minum</p>
-            {records.map(item => (
-              <div
-                key={item.id}
-                className="card p-4 flex items-center justify-between hover:shadow-md transition-all"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
-                    <span className="material-symbols-outlined text-xl">water_drop</span>
+            <p className="text-label text-on-surface-variant mb-2">Detail {recordType === 'susu' ? 'Minum Susu' : 'MPASI'}</p>
+            {currentRecords.map(item => {
+              const itemUnit = recordType === 'susu' ? 'ml' : (item as MpasiRecord).unit;
+              return (
+                <div
+                  key={item.id}
+                  className="card p-4 flex items-center justify-between hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-full ${recordType === 'susu' ? 'bg-primary/10' : 'bg-secondary/10'} flex items-center justify-center ${recordType === 'susu' ? 'text-primary' : 'text-secondary'} flex-shrink-0`}>
+                      <span className="material-symbols-outlined text-xl">{recordType === 'susu' ? 'local_drink' : 'restaurant'}</span>
+                    </div>
+                    <div>
+                      <p className="text-body font-semibold text-on-surface">{item.amount} {itemUnit}</p>
+                      <p className="text-label text-on-surface-variant">{item.time}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-body font-semibold text-on-surface">{item.amount} ml</p>
-                    <p className="text-label text-on-surface-variant">{item.time}</p>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className={`p-2 hover:bg-primary/10 rounded-full transition-all ${recordType === 'susu' ? 'text-primary' : 'text-secondary'}`}
+                    >
+                      <span className="material-symbols-outlined text-xl">edit</span>
+                    </button>
+                    <button
+                      onClick={() => setDeleteId(item.id)}
+                      className="text-error p-2 hover:bg-error/10 rounded-full transition-all"
+                    >
+                      <span className="material-symbols-outlined text-xl">delete</span>
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => handleEdit(item)}
-                    className="text-primary p-2 hover:bg-primary/10 rounded-full transition-all"
-                  >
-                    <span className="material-symbols-outlined text-xl">edit</span>
-                  </button>
-                  <button
-                    onClick={() => setDeleteId(item.id)}
-                    className="text-error p-2 hover:bg-error/10 rounded-full transition-all"
-                  >
-                    <span className="material-symbols-outlined text-xl">delete</span>
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>
@@ -465,6 +532,10 @@ export default function History() {
         <Link href="/" className="nav-item">
           <span className="material-symbols-outlined">home</span>
           <span className="label">Home</span>
+        </Link>
+        <Link href="/growth" className="nav-item">
+          <span className="material-symbols-outlined">straighten</span>
+          <span className="label">Growth</span>
         </Link>
         <Link href="/history" className="nav-item active">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>history</span>
@@ -486,7 +557,7 @@ export default function History() {
               value={editAmount}
               onChange={(e) => setEditAmount(e.target.value)}
               className="w-full px-4 py-3 bg-surface-container rounded-xl text-on-surface text-center text-lg font-semibold mb-4"
-              placeholder="Jumlah (ml)"
+              placeholder={`Jumlah (${recordType === 'susu' ? 'ml' : 'ml/gr'})`}
               autoFocus
             />
             <div className="flex gap-3">

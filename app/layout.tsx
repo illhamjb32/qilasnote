@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Qila's Note - Pencatat Minum Susu",
-  description: "Aplikasi untuk mencatat konsumsi susu bayi",
+  title: "Qila's Note - Pencatat Susu & MPASI",
+  description: "Aplikasi untuk mencatat konsumsi susu dan MPASI bayi",
 };
 
 export default function RootLayout({
