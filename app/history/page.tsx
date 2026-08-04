@@ -229,7 +229,8 @@ export default function History() {
 
   const currentTarget = recordType === 'susu' ? dailyTarget : dailyTargetMpasi;
   const currentRecords = recordType === 'susu' ? records : recordsMpasi;
-  const maxAmount = currentRecords.length > 0 ? Math.max(...currentRecords.map(i => i.amount), currentTarget) : currentTarget;
+  const barMaxAmount = recordType === 'susu' ? 300 : 100;
+  const maxAmount = currentRecords.length > 0 ? Math.max(...currentRecords.map(i => i.amount), barMaxAmount) : barMaxAmount;
   const totalAmount = getDailyTotal();
   const progressPercent = Math.min((totalAmount / currentTarget) * 100, 100);
 

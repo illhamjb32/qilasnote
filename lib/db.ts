@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { MilkRecord, MpasiRecord, GrowthRecord, MpasiUnit, UserSettings } from './types';
+import { MilkRecord, MpasiRecord, GrowthRecord, MpasiUnit, UserSettings, AdditionalFood } from './types';
 
 export async function getMilkRecords(): Promise<MilkRecord[]> {
   const { data, error } = await supabase
@@ -271,4 +271,60 @@ export async function deleteAllGrowthRecords(): Promise<void> {
     .neq('id', 0);
 
   if (error) throw error;
+}
+
+export async function deleteAdditionalFood(foodType: 'snack' | 'fruit', date: string): Promise<void> {
+  const { error } = await supabase
+    .from('additional_food')
+    .delete()
+    .eq('food_type', foodType)
+    .eq('date', date);
+
+  if (error) throw error;
+}
+
+export async function upsertAdditionalFood(foodType: 'snack' | 'fruit', date: string): Promise<AdditionalFood> {
+  const { data: existing, error: checkError } = await supabase
+    .from('additional_food')
+    .select('*')
+    .eq('food_type', foodType)
+    .eq('date', date)
+    .single();
+
+  if (checkError && checkError.code !== 'PGRST116') throw checkError;
+
+  if (existing) {
+    const { data, error } = await supabase
+      .from('additional_food')
+      .update({ timestamp: new Date().toISOString() })
+      .eq('id', existing.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await supabase
+      .from('additional_food')
+      .insert([{
+        food_type: foodType,
+        date,
+        timestamp: new Date().toISOString()
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+}
+
+export async function getAdditionalFoodByDate(date: string): Promise<AdditionalFood[]> {
+  const { data, error } = await supabase
+    .from('additional_food')
+    .select('*')
+    .eq('date', date);
+
+  if (error) throw error;
+  return data || [];
 }

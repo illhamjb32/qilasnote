@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { MilkRecord, MpasiRecord, RecordType, MpasiUnit } from '@/lib/types';
-import { getMilkRecordsByDate, addMilkRecord, getMpasiRecordsByDate, addMpasiRecord, getUserSettings } from '@/lib/db';
+import { MilkRecord, MpasiRecord, RecordType, MpasiUnit, AdditionalFood } from '@/lib/types';
+import { getMilkRecordsByDate, addMilkRecord, getMpasiRecordsByDate, addMpasiRecord, getUserSettings, upsertAdditionalFood, getAdditionalFoodByDate, deleteAdditionalFood } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +22,9 @@ export default function Home() {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [quickValues, setQuickValues] = useState([60, 90, 120, 150]);
   const [quickValuesMpasi, setQuickValuesMpasi] = useState([50, 100, 150, 200]);
+  const [isSnack, setIsSnack] = useState(false);
+  const [isFruit, setIsFruit] = useState(false);
+  const [showTips, setShowTips] = useState(false);
 
   const percentage = Math.min((totalToday / (recordType === 'susu' ? dailyTarget : dailyTargetMpasi)) * 100, 100);
   const circumference = 2 * Math.PI * 88;
@@ -70,6 +73,10 @@ export default function Home() {
         setTotalToday(total);
         setHistoryMpasiToday(data.slice(0, 5));
         setHistoryToday([]);
+        
+        const additionalFoods = await getAdditionalFoodByDate(today);
+        setIsSnack(additionalFoods.some(f => f.food_type === 'snack'));
+        setIsFruit(additionalFoods.some(f => f.food_type === 'fruit'));
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -109,6 +116,32 @@ export default function Home() {
       alert('Gagal menyimpan data. Silakan coba lagi.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSnackChange = async (checked: boolean) => {
+    setIsSnack(checked);
+    try {
+      if (checked) {
+        await upsertAdditionalFood('snack', getTodayString());
+      } else {
+        await deleteAdditionalFood('snack', getTodayString());
+      }
+    } catch (error) {
+      console.error('Error saving snack:', error);
+    }
+  };
+
+  const handleFruitChange = async (checked: boolean) => {
+    setIsFruit(checked);
+    try {
+      if (checked) {
+        await upsertAdditionalFood('fruit', getTodayString());
+      } else {
+        await deleteAdditionalFood('fruit', getTodayString());
+      }
+    } catch (error) {
+      console.error('Error saving fruit:', error);
     }
   };
 
@@ -198,6 +231,15 @@ export default function Home() {
             <span className="material-symbols-outlined text-on-secondary-container text-lg">auto_awesome</span>
             <span className="text-label text-on-secondary-container">Bagus! {Math.round(percentage)}% tercapai</span>
           </div>
+
+          {recordType === 'mpasi' && (isSnack || isFruit) && (
+            <div className="flex items-center justify-center gap-2 px-4 py-2 mt-2 bg-tertiary-container rounded-full">
+              <span className="material-symbols-outlined text-on-tertiary-container text-lg">nutrition</span>
+              <span className="text-label text-on-tertiary-container">
+                Hari ini: {isSnack && 'Snack'}{isSnack && isFruit && ' & '}{isFruit && 'Buah'}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Quick Input */}
@@ -259,6 +301,33 @@ export default function Home() {
               className="btn btn-primary w-full">
               Simpan
             </button>
+          </div>
+        )}
+
+        {/* Additional Food */}
+        {recordType === 'mpasi' && (
+          <div className="card p-6 mb-6">
+            <h3 className="text-title-md text-on-surface mb-4">Additional Food</h3>
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isSnack}
+                  onChange={(e) => handleSnackChange(e.target.checked)}
+                  className="w-5 h-5 rounded border-2 border-outline text-primary focus:ring-2 focus:ring-primary"
+                />
+                <span className="text-body text-on-surface">Snack</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isFruit}
+                  onChange={(e) => handleFruitChange(e.target.checked)}
+                  className="w-5 h-5 rounded border-2 border-outline text-primary focus:ring-2 focus:ring-primary"
+                />
+                <span className="text-body text-on-surface">Buah</span>
+              </label>
+            </div>
           </div>
         )}
 
@@ -325,6 +394,7 @@ export default function Home() {
                 </div>
               )}
             </div>
+            
             <div className="mb-4">
               <label className="text-label text-on-surface-variant mb-2 block">Waktu</label>
               <input
@@ -335,6 +405,7 @@ export default function Home() {
                 required
               />
             </div>
+
             <button type="submit" className="btn btn-primary w-full py-4 text-lg" disabled={loading}>
               {loading ? 'Menyimpan...' : 'Simpan'}
             </button>
@@ -347,6 +418,14 @@ export default function Home() {
             <h2 className="text-headline-sm text-on-surface">Riwayat Terbaru</h2>
             <Link href="/history" className="text-label text-primary hover:underline">Lihat Semua</Link>
           </div>
+
+          {recordType === 'mpasi' && (isSnack || isFruit) && (
+            <div className="mb-3 px-1">
+              <p className="text-label text-on-surface-variant">
+                {getTodayString()} - Additional: {isSnack && 'Snack'}{isSnack && isFruit && ' & '}{isFruit && 'Buah'}
+              </p>
+            </div>
+          )}
 
           <div className="space-y-3">
             {recordType === 'susu' ? (
@@ -382,7 +461,15 @@ export default function Home() {
                       <span className="material-symbols-outlined text-secondary">restaurant</span>
                     </div>
                     <div className="flex-1">
-                      <p className="text-body text-on-surface">MPASI</p>
+                      <p className="text-body text-on-surface flex items-center gap-2">
+                        MPASI
+                        {isSnack && (
+                          <span className="material-symbols-outlined text-tertiary text-base" title="Snack">cookie</span>
+                        )}
+                        {isFruit && (
+                          <span className="material-symbols-outlined text-tertiary text-base" title="Buah">nutrition</span>
+                        )}
+                      </p>
                       <p className="text-label text-outline">Pukul {item.time}</p>
                     </div>
                     <div className="text-right">
@@ -397,11 +484,57 @@ export default function Home() {
       </main>
 
       {/* FAB */}
-      <Link href="/history" className="no-underline">
-        <button className="fab">
-          <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'wght' 600" }}>add</span>
-        </button>
-      </Link>
+      <button onClick={() => setShowTips(true)} className="fab">
+        <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'wght' 600" }}>help</span>
+      </button>
+
+      {/* Tips Modal */}
+      {showTips && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowTips(false)}>
+          <div className="card p-6 max-w-md w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-title-lg text-on-surface">Tips & Cara Input</h2>
+              <button onClick={() => setShowTips(false)} className="p-2 hover:bg-surface-container rounded-full">
+                <span className="material-symbols-outlined text-on-surface">close</span>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-title-md text-on-surface mb-2 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary">local_drink</span>
+                  Input Susu
+                </h3>
+                <p className="text-body text-on-surface-variant">Pilih tab Susu, gunakan tombol input cepat atau masukkan jumlah manual, lalu klik Simpan.</p>
+              </div>
+
+              <div>
+                <h3 className="text-title-md text-on-surface mb-2 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-secondary">restaurant</span>
+                  Input MPASI
+                </h3>
+                <p className="text-body text-on-surface-variant">Pilih tab MPASI, pilih satuan (ml/gr), masukkan jumlah dan waktu, lalu klik Simpan.</p>
+              </div>
+
+              <div>
+                <h3 className="text-title-md text-on-surface mb-2 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-tertiary">nutrition</span>
+                  Additional Food
+                </h3>
+                <p className="text-body text-on-surface-variant">Centang checkbox Snack atau Buah untuk mencatat makanan tambahan hari ini. Checkbox otomatis tersimpan.</p>
+              </div>
+
+              <div>
+                <h3 className="text-title-md text-on-surface mb-2 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary">edit</span>
+                  Custom Input
+                </h3>
+                <p className="text-body text-on-surface-variant">Klik tombol Custom pada Input Cepat untuk mengatur nilai tombol sesuai kebutuhan Anda.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Navigation */}
       <nav className="bottom-nav">

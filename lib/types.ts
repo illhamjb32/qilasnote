@@ -20,6 +20,14 @@ export interface MpasiRecord {
   created_at?: string;
 }
 
+export interface AdditionalFood {
+  id: number;
+  food_type: 'snack' | 'fruit';
+  date: string;
+  timestamp: string;
+  created_at?: string;
+}
+
 export interface GrowthRecord {
   id: number;
   weight: number; // in kg

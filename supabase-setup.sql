@@ -22,6 +22,16 @@ CREATE TABLE mpasi_records (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Tabel untuk menyimpan additional food (snack dan buah)
+CREATE TABLE additional_food (
+  id BIGSERIAL PRIMARY KEY,
+  food_type TEXT NOT NULL CHECK (food_type IN ('snack', 'fruit')),
+  date DATE NOT NULL,
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(food_type, date)
+);
+
 -- Tabel untuk menyimpan catatan pertumbuhan
 CREATE TABLE growth_records (
   id BIGSERIAL PRIMARY KEY,
@@ -49,16 +59,20 @@ CREATE INDEX idx_milk_records_date ON milk_records(date DESC);
 CREATE INDEX idx_milk_records_timestamp ON milk_records(timestamp DESC);
 CREATE INDEX idx_mpasi_records_date ON mpasi_records(date DESC);
 CREATE INDEX idx_mpasi_records_timestamp ON mpasi_records(timestamp DESC);
+CREATE INDEX idx_additional_food_date ON additional_food(date DESC);
+CREATE INDEX idx_additional_food_food_type_date ON additional_food(food_type, date);
 CREATE INDEX idx_growth_records_date ON growth_records(date DESC);
 CREATE INDEX idx_growth_records_timestamp ON growth_records(timestamp DESC);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE milk_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mpasi_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE additional_food ENABLE ROW LEVEL SECURITY;
 ALTER TABLE growth_records ENABLE ROW LEVEL SECURITY;
 
 -- Policy untuk akses publik (untuk development)
 -- CATATAN: Untuk production, gunakan policy yang lebih ketat dengan auth
 CREATE POLICY "Enable all access for milk_records" ON milk_records FOR ALL USING (true);
 CREATE POLICY "Enable all access for mpasi_records" ON mpasi_records FOR ALL USING (true);
+CREATE POLICY "Enable all access for additional_food" ON additional_food FOR ALL USING (true);
 CREATE POLICY "Enable all access for growth_records" ON growth_records FOR ALL USING (true);
