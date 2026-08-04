@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { MilkRecord, MpasiRecord, RecordType } from '@/lib/types';
-import { getMilkRecordsByDate, deleteMilkRecord, updateMilkRecord, getMpasiRecordsByDate, deleteMpasiRecord, updateMpasiRecord } from '@/lib/db';
+import { MilkRecord, MpasiRecord, RecordType, AdditionalFood } from '@/lib/types';
+import { getMilkRecordsByDate, deleteMilkRecord, updateMilkRecord, getMpasiRecordsByDate, deleteMpasiRecord, updateMpasiRecord, getAdditionalFoodByDate } from '@/lib/db';
 
 // Disable static prerendering - this page uses localStorage which isn't available on server
 export const dynamic = 'force-dynamic';
@@ -23,6 +23,7 @@ export default function History() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const calendarRef = useRef<HTMLDivElement>(null);
+  const [additionalFoods, setAdditionalFoods] = useState<AdditionalFood[]>([]);
 
   useEffect(() => {
     const savedTarget = localStorage.getItem('dailyTarget');
@@ -62,9 +63,12 @@ export default function History() {
         const data = await getMpasiRecordsByDate(selectedDate);
         data.sort((a, b) => b.time.localeCompare(a.time));
         setRecordsMpasi(data);
+        
+        const additionalData = await getAdditionalFoodByDate(selectedDate);
+        setAdditionalFoods(additionalData);
       }
     } catch (error) {
-      console.error('Error loading history:', error);
+      console.error('Error loading data:', error);
     }
   };
 
@@ -440,6 +444,21 @@ export default function History() {
             </span>
             <span className="text-outline">{currentTarget} {recordType === 'susu' ? 'ml' : 'ml/gr'}</span>
           </div>
+
+          {recordType === 'mpasi' && additionalFoods.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-outline-variant">
+              <div className="flex gap-2 items-center justify-center">
+                {additionalFoods.map((food) => (
+                  <div key={food.id} className="flex items-center gap-1.5 px-3 py-2 bg-tertiary-container text-on-tertiary-container rounded-full">
+                    <span className="material-symbols-outlined text-lg">
+                      {food.food_type === 'snack' ? 'cookie' : 'nutrition'}
+                    </span>
+                    <span className="text-label font-medium">{food.food_type === 'snack' ? 'Snack' : 'Buah'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Records List */}
