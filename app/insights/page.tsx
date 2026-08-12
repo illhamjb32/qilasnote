@@ -177,6 +177,28 @@ export default function Insights() {
   const totalSessions = chartData.reduce((sum, d) => sum + d.count, 0);
   const avgPerSession = totalSessions > 0 ? Math.round(totalConsumed / totalSessions) : 0;
 
+  const getTimeAnalysis = () => {
+    if (recordType === 'susu' && data.length > 0) {
+      const hourCounts: { [key: number]: number } = {};
+      data.forEach(r => {
+        const hour = parseInt(r.time.split(':')[0]);
+        hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+      });
+      
+      const mostFrequentHour = Object.entries(hourCounts).reduce((max, [hour, count]) => 
+        count > max.count ? { hour: parseInt(hour), count } : max
+      , { hour: 0, count: 0 });
+
+      return {
+        mostFrequentHour: String(mostFrequentHour.hour).padStart(2, '0') + ':00',
+        mostFrequentCount: mostFrequentHour.count
+      };
+    }
+    return null;
+  };
+
+  const timeAnalysis = getTimeAnalysis();
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -757,6 +779,19 @@ export default function Insights() {
                   </span>
                 </div>
               </div>
+
+              {recordType === 'susu' && timeAnalysis && (
+                <div className="flex items-center gap-3 p-3 bg-surface-container rounded-xl">
+                  <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center">
+                    <span className="material-symbols-outlined text-primary">local_fire_department</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-label text-on-surface-variant">Paling Sering Minum</p>
+                    <p className="text-body text-on-surface">Jam {timeAnalysis.mostFrequentHour} WIB</p>
+                    <p className="text-label text-outline">{timeAnalysis.mostFrequentCount} kali dalam periode ini</p>
+                  </div>
+                </div>
+              )}
 
               {/* Recommendation */}
               <div className="p-4 bg-tertiary-container/30 rounded-xl">

@@ -16,7 +16,23 @@ export default function Settings() {
 
   useEffect(() => {
     loadSettings();
+    
+    if (typeof window !== 'undefined') {
+      const reminderEnabled = localStorage.getItem('reminderEnabled') === 'true';
+      const savedInterval = localStorage.getItem('reminderInterval');
+      
+      if (reminderEnabled && savedInterval && Notification.permission === 'granted') {
+        scheduleReminders(parseInt(savedInterval));
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    if (notificationEnabled && typeof window !== 'undefined') {
+      clearReminders();
+      scheduleReminders(parseInt(reminderInterval));
+    }
+  }, [reminderInterval, notificationEnabled]);
 
   const loadSettings = async () => {
     try {
@@ -53,8 +69,77 @@ export default function Settings() {
     }
   };
 
-  const handleNotificationToggle = () => {
-    setNotificationEnabled(!notificationEnabled);
+  const handleNotificationToggle = async () => {
+    if (!notificationEnabled) {
+      if ('Notification' in window) {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          setNotificationEnabled(true);
+          scheduleReminders(parseInt(reminderInterval));
+          setToastMessage('Pengingat diaktifkan!');
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 2000);
+        } else {
+          alert('Izin notifikasi ditolak. Silakan aktifkan di pengaturan browser.');
+        }
+      } else {
+        alert('Browser tidak mendukung notifikasi.');
+      }
+    } else {
+      setNotificationEnabled(false);
+      clearReminders();
+      setToastMessage('Pengingat dinonaktifkan');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
+    }
+  };
+
+  const scheduleReminders = (intervalHours: number) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('reminderEnabled', 'true');
+      localStorage.setItem('reminderInterval', intervalHours.toString());
+      localStorage.setItem('lastReminderCheck', Date.now().toString());
+      
+      const checkReminder = () => {
+        const lastCheck = parseInt(localStorage.getItem('lastReminderCheck') || '0');
+        const intervalMs = intervalHours * 60 * 60 * 1000;
+        const now = Date.now();
+        
+        if (now - lastCheck >= intervalMs) {
+          if (Notification.permission === 'granted') {
+            new Notification('Qila\'s Note - Pengingat Makan', {
+              body: `Waktunya memberi makan bayi! Sudah ${intervalHours} jam sejak pengingat terakhir.`,
+              icon: '/icon-192x192.png',
+              badge: '/icon-192x192.png',
+              tag: 'feeding-reminder',
+              requireInteraction: false
+            });
+          }
+          localStorage.setItem('lastReminderCheck', now.toString());
+        }
+      };
+      
+      checkReminder();
+      
+      const reminderId = setInterval(checkReminder, 60000);
+      
+      if (typeof window !== 'undefined' && (window as any).currentReminderId) {
+        clearInterval((window as any).currentReminderId);
+      }
+      (window as any).currentReminderId = reminderId;
+    }
+  };
+
+  const clearReminders = () => {
+    if (typeof window !== 'undefined') {
+      if ((window as any).currentReminderId) {
+        clearInterval((window as any).currentReminderId);
+        (window as any).currentReminderId = null;
+      }
+      localStorage.removeItem('reminderEnabled');
+      localStorage.removeItem('reminderInterval');
+      localStorage.removeItem('lastReminderCheck');
+    }
   };
 
   const handleIntervalChange = (value: string) => {

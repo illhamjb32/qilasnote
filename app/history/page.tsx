@@ -447,13 +447,20 @@ export default function History() {
 
           {recordType === 'mpasi' && additionalFoods.length > 0 && (
             <div className="mt-4 pt-3 border-t border-outline-variant">
-              <div className="flex gap-2 items-center justify-center">
+              <div className="flex gap-2 items-center justify-center flex-wrap mt-2">
                 {additionalFoods.map((food) => (
-                  <div key={food.id} className="flex items-center gap-1.5 px-3 py-2 bg-tertiary-container text-on-tertiary-container rounded-full">
-                    <span className="material-symbols-outlined text-lg">
-                      {food.food_type === 'snack' ? 'cookie' : 'nutrition'}
+                  <div 
+                    key={food.id} 
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full shadow-sm transition-all hover:shadow-md ${
+                      food.food_type === 'snack' 
+                        ? 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border border-amber-200' 
+                        : 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200'
+                    }`}
+                  >
+                    <span className="text-lg">
+                      {food.food_type === 'snack' ? '🍪' : '🍎'}
                     </span>
-                    <span className="text-label font-medium">{food.food_type === 'snack' ? 'Snack' : 'Buah'}</span>
+                    <span className="text-label font-semibold">{food.food_type === 'snack' ? 'Snack' : 'Buah'}</span>
                   </div>
                 ))}
               </div>

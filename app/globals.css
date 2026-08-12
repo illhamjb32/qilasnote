@@ -96,6 +96,55 @@ body {
   background-color: var(--background);
 }
 
+.app-container.bg-gradient-to-b {
+  background-image: linear-gradient(to bottom, var(--tw-gradient-stops));
+}
+
+.from-orange-50 {
+  --tw-gradient-from: #fff7ed;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 247, 237, 0));
+}
+
+.to-white {
+  --tw-gradient-to: #ffffff;
+}
+
+.text-orange-500 {
+  color: #f97316;
+}
+
+.bg-orange-500 {
+  background-color: #f97316;
+}
+
+.bg-orange-600 {
+  background-color: #ea580c;
+}
+
+.hover\:bg-orange-600:hover {
+  background-color: #ea580c;
+}
+
+.bg-orange-100 {
+  background-color: #ffedd5;
+}
+
+.border-orange-500 {
+  border-color: #f97316;
+}
+
+.border-orange-300 {
+  border-color: #fdba74;
+}
+
+.text-amber-600 {
+  color: #d97706;
+}
+
+.text-green-600 {
+  color: #16a34a;
+}
+
 .app-content {
   flex: 1;
   width: 100%;

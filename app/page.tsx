@@ -25,8 +25,45 @@ export default function Home() {
   const [isSnack, setIsSnack] = useState(false);
   const [isFruit, setIsFruit] = useState(false);
   const [showTips, setShowTips] = useState(false);
+  const [qilaAge, setQilaAge] = useState('');
 
   const percentage = Math.min((totalToday / (recordType === 'susu' ? dailyTarget : dailyTargetMpasi)) * 100, 100);
+
+  const calculateAge = () => {
+    const birthDate = new Date('2026-01-28T01:50:00');
+    const now = new Date();
+    
+    let years = now.getFullYear() - birthDate.getFullYear();
+    let months = now.getMonth() - birthDate.getMonth();
+    let days = now.getDate() - birthDate.getDate();
+    let hours = now.getHours() - birthDate.getHours();
+    let minutes = now.getMinutes() - birthDate.getMinutes();
+    let seconds = now.getSeconds() - birthDate.getSeconds();
+
+    if (seconds < 0) {
+      minutes--;
+      seconds += 60;
+    }
+    if (minutes < 0) {
+      hours--;
+      minutes += 60;
+    }
+    if (hours < 0) {
+      days--;
+      hours += 24;
+    }
+    if (days < 0) {
+      months--;
+      const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      days += prevMonth.getDate();
+    }
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    return `${years} tahun, ${months} bulan, ${days} hari, ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  };
   const circumference = 2 * Math.PI * 88;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
@@ -36,6 +73,14 @@ export default function Home() {
     setTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
     loadData();
   }, [recordType]);
+
+  useEffect(() => {
+    setQilaAge(calculateAge());
+    const interval = setInterval(() => {
+      setQilaAge(calculateAge());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const loadSettings = async () => {
     try {
@@ -151,14 +196,17 @@ export default function Home() {
   const currentQuickValues = recordType === 'susu' ? quickValues : quickValuesMpasi;
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${recordType === 'mpasi' ? 'bg-gradient-to-b from-orange-50 to-white' : ''}`}>
       {/* Header */}
       <header className="app-header">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-primary text-xl">account_circle</span>
+          <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-primary">child_care</span>
           </div>
-          <h1 className="text-headline-sm text-primary font-quicksand">Qila&apos;s Note</h1>
+          <div className="flex flex-col">
+            <h1 className="text-headline-sm text-primary font-quicksand leading-tight">Qila&apos;s Note</h1>
+            <p className="text-xs text-on-surface-variant leading-tight">Umur: {qilaAge}</p>
+          </div>
         </div>
         <Link href="/settings" className="no-underline">
           <button className="w-10 h-10 rounded-full hover:bg-surface-container-high flex items-center justify-center transition-colors">
@@ -189,7 +237,7 @@ export default function Home() {
               onClick={() => setRecordType('mpasi')}
               className={`flex-1 py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-all ${
                 recordType === 'mpasi'
-                  ? 'bg-primary text-on-primary shadow-sm'
+                  ? 'bg-orange-500 text-white shadow-sm'
                   : 'text-on-surface-variant hover:bg-surface-container-high'
               }`}
             >
@@ -209,11 +257,11 @@ export default function Home() {
 
           <div className="relative w-48 h-48 mx-auto flex items-center justify-center mb-6">
             <svg className="w-full h-full">
-              <circle cx="96" cy="96" r="88" fill="transparent" stroke="rgba(165, 216, 255, 0.2)" strokeWidth="12" />
+              <circle cx="96" cy="96" r="88" fill="transparent" stroke={recordType === 'mpasi' ? 'rgba(251, 146, 60, 0.2)' : 'rgba(165, 216, 255, 0.2)'} strokeWidth="12" />
               <circle
                 className="progress-ring"
                 cx="96" cy="96" r="88" fill="transparent"
-                stroke="var(--primary)" strokeWidth="12"
+                stroke={recordType === 'mpasi' ? '#f97316' : 'var(--primary)'} strokeWidth="12"
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
                 strokeLinecap="round"
@@ -221,8 +269,8 @@ export default function Home() {
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
               <span className="text-label text-on-surface-variant">Total Hari Ini</span>
-              <span className="text-display text-primary">{totalToday}</span>
-              <span className="text-headline-sm text-primary">{recordType === 'susu' ? 'ml' : mpasiUnit}</span>
+              <span className={`text-display ${recordType === 'mpasi' ? 'text-orange-500' : 'text-primary'}`}>{totalToday}</span>
+              <span className={`text-headline-sm ${recordType === 'mpasi' ? 'text-orange-500' : 'text-primary'}`}>{recordType === 'susu' ? 'ml' : mpasiUnit}</span>
               <span className="text-label text-outline mt-2">Target: {recordType === 'susu' ? dailyTarget : dailyTargetMpasi} {recordType === 'susu' ? 'ml' : mpasiUnit}</span>
             </div>
           </div>
@@ -253,7 +301,7 @@ export default function Home() {
                 onClick={() => quickInput(value)}
                 className={`flex-1 min-w-[70px] h-14 rounded-full flex flex-col items-center justify-center transition-all ${amount === value.toString() ? 'btn-chip active' : 'btn-chip'}`}
               >
-                <span className={`text-headline-sm ${amount === value.toString() ? 'text-on-primary-container' : 'text-primary'}`}>{value}</span>
+                <span className={`text-headline-sm ${amount === value.toString() ? 'text-on-primary-container' : recordType === 'mpasi' ? 'text-orange-500' : 'text-primary'}`}>{value}</span>
                 <span className={`text-label ${amount === value.toString() ? 'text-on-primary-container' : 'text-outline'}`}>{recordType === 'susu' ? 'ml' : mpasiUnit}</span>
               </button>
             ))}
@@ -261,7 +309,7 @@ export default function Home() {
               type="button"
               onClick={() => setShowCustomInput(!showCustomInput)}
               className="flex-[1.5] min-w-[90px] h-14 bg-surface-container rounded-full flex items-center justify-center gap-2 transition-all hover:bg-surface-container-high">
-              <span className="material-symbols-outlined text-primary">edit</span>
+              <span className={`material-symbols-outlined ${recordType === 'mpasi' ? 'text-orange-500' : 'text-primary'}`}>edit</span>
               <span className="text-label text-on-surface">Custom</span>
             </button>
           </div>
@@ -344,7 +392,7 @@ export default function Home() {
                     onClick={() => setMpasiUnit('ml')}
                     className={`flex-1 py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-all ${
                       mpasiUnit === 'ml'
-                        ? 'bg-primary text-on-primary shadow-sm'
+                        ? 'bg-orange-500 text-white shadow-sm'
                         : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
                     }`}
                   >
@@ -355,7 +403,7 @@ export default function Home() {
                     onClick={() => setMpasiUnit('gr')}
                     className={`flex-1 py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-all ${
                       mpasiUnit === 'gr'
-                        ? 'bg-primary text-on-primary shadow-sm'
+                        ? 'bg-orange-500 text-white shadow-sm'
                         : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
                     }`}
                   >
@@ -406,7 +454,7 @@ export default function Home() {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary w-full py-4 text-lg" disabled={loading}>
+            <button type="submit" className={`btn w-full py-4 text-lg ${recordType === 'mpasi' ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'btn-primary'}`} disabled={loading}>
               {loading ? 'Menyimpan...' : 'Simpan'}
             </button>
           </form>
@@ -416,7 +464,7 @@ export default function Home() {
         <div className="mb-6">
           <div className="flex justify-between items-end mb-4 px-1">
             <h2 className="text-headline-sm text-on-surface">Riwayat Terbaru</h2>
-            <Link href="/history" className="text-label text-primary hover:underline">Lihat Semua</Link>
+            <Link href="/history" className={`text-label hover:underline ${recordType === 'mpasi' ? 'text-orange-500' : 'text-primary'}`}>Lihat Semua</Link>
           </div>
 
           {recordType === 'mpasi' && (isSnack || isFruit) && (
@@ -456,24 +504,24 @@ export default function Home() {
                 </div>
               ) : (
                 historyMpasiToday.map((item, index) => (
-                  <div key={item.id} className={`card p-4 flex items-center border-l-4 ${index === 0 ? 'border-secondary' : 'border-secondary/40'}`}>
-                    <div className="w-12 h-12 rounded-full bg-secondary-container/30 flex items-center justify-center mr-4 flex-shrink-0">
-                      <span className="material-symbols-outlined text-secondary">restaurant</span>
+                  <div key={item.id} className={`card p-4 flex items-center border-l-4 ${index === 0 ? 'border-orange-500' : 'border-orange-300'}`}>
+                    <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mr-4 flex-shrink-0">
+                      <span className="material-symbols-outlined text-orange-500">restaurant</span>
                     </div>
                     <div className="flex-1">
                       <p className="text-body text-on-surface flex items-center gap-2">
                         MPASI
                         {isSnack && (
-                          <span className="material-symbols-outlined text-tertiary text-base" title="Snack">cookie</span>
+                          <span className="material-symbols-outlined text-amber-600 text-base" title="Snack">cookie</span>
                         )}
                         {isFruit && (
-                          <span className="material-symbols-outlined text-tertiary text-base" title="Buah">nutrition</span>
+                          <span className="material-symbols-outlined text-green-600 text-base" title="Buah">nutrition</span>
                         )}
                       </p>
                       <p className="text-label text-outline">Pukul {item.time}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-headline-sm text-secondary">{item.amount} {item.unit}</p>
+                      <p className="text-headline-sm text-orange-500">{item.amount} {item.unit}</p>
                     </div>
                   </div>
                 ))
