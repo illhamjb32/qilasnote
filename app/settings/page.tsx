@@ -17,7 +17,7 @@ export default function Settings() {
   useEffect(() => {
     loadSettings();
     
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
       const reminderEnabled = localStorage.getItem('reminderEnabled') === 'true';
       const savedInterval = localStorage.getItem('reminderInterval');
       
@@ -28,7 +28,7 @@ export default function Settings() {
   }, []);
 
   useEffect(() => {
-    if (notificationEnabled && typeof window !== 'undefined') {
+    if (notificationEnabled && typeof window !== 'undefined' && 'Notification' in window) {
       clearReminders();
       scheduleReminders(parseInt(reminderInterval));
     }
@@ -95,7 +95,7 @@ export default function Settings() {
   };
 
   const scheduleReminders = (intervalHours: number) => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
       localStorage.setItem('reminderEnabled', 'true');
       localStorage.setItem('reminderInterval', intervalHours.toString());
       localStorage.setItem('lastReminderCheck', Date.now().toString());
@@ -106,7 +106,7 @@ export default function Settings() {
         const now = Date.now();
         
         if (now - lastCheck >= intervalMs) {
-          if (Notification.permission === 'granted') {
+          if ('Notification' in window && Notification.permission === 'granted') {
             new Notification('Qila\'s Note - Pengingat Makan', {
               body: `Waktunya memberi makan bayi! Sudah ${intervalHours} jam sejak pengingat terakhir.`,
               icon: '/icon-192x192.png',
