@@ -244,7 +244,7 @@ export default function Growth() {
                         <span className="material-symbols-outlined text-tertiary text-xl">edit</span>
                       </button>
                       <button
-                        onClick={() => setDeleteId(record.id)}
+                        onClick={() => record.id && setDeleteId(record.id)}
                         className="p-2 hover:bg-error/10 rounded-full transition-all"
                       >
                         <span className="material-symbols-outlined text-error text-xl">delete</span>
@@ -288,6 +288,10 @@ export default function Growth() {
         <Link href="/history" className="nav-item">
           <span className="material-symbols-outlined">history</span>
           <span className="label">History</span>
+        </Link>
+        <Link href="/notes" className="nav-item">
+          <span className="material-symbols-outlined">note</span>
+          <span className="label">Notes</span>
         </Link>
         <Link href="/insights" className="nav-item">
           <span className="material-symbols-outlined">insights</span>

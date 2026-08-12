@@ -193,8 +193,10 @@ export default function History() {
   };
 
   const handleEdit = (record: MilkRecord | MpasiRecord) => {
-    setEditId(record.id);
-    setEditAmount(record.amount.toString());
+    if (record.id) {
+      setEditId(record.id);
+      setEditAmount(record.amount.toString());
+    }
   };
 
   const handleSaveEdit = async () => {
@@ -541,7 +543,7 @@ export default function History() {
                       <span className="material-symbols-outlined text-xl">edit</span>
                     </button>
                     <button
-                      onClick={() => setDeleteId(item.id)}
+                      onClick={() => item.id && setDeleteId(item.id)}
                       className="text-error p-2 hover:bg-error/10 rounded-full transition-all"
                     >
                       <span className="material-symbols-outlined text-xl">delete</span>
@@ -567,6 +569,10 @@ export default function History() {
         <Link href="/history" className="nav-item active">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>history</span>
           <span className="label">History</span>
+        </Link>
+        <Link href="/notes" className="nav-item">
+          <span className="material-symbols-outlined">note</span>
+          <span className="label">Notes</span>
         </Link>
         <Link href="/insights" className="nav-item">
           <span className="material-symbols-outlined">insights</span>

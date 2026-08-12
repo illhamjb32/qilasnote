@@ -598,6 +598,10 @@ export default function Home() {
           <span className="material-symbols-outlined">history</span>
           <span className="label">History</span>
         </Link>
+        <Link href="/notes" className="nav-item">
+          <span className="material-symbols-outlined">note</span>
+          <span className="label">Notes</span>
+        </Link>
         <Link href="/insights" className="nav-item">
           <span className="material-symbols-outlined">insights</span>
           <span className="label">Insights</span>

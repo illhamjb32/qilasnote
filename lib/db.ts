@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { MilkRecord, MpasiRecord, GrowthRecord, MpasiUnit, UserSettings, AdditionalFood } from './types';
+import { MilkRecord, MpasiRecord, GrowthRecord, MpasiUnit, UserSettings, AdditionalFood, Note } from './types';
 
 export async function getMilkRecords(): Promise<MilkRecord[]> {
   const { data, error } = await supabase
@@ -327,4 +327,47 @@ export async function getAdditionalFoodByDate(date: string): Promise<AdditionalF
 
   if (error) throw error;
   return data || [];
+}
+
+export async function getNotes(): Promise<Note[]> {
+  const { data, error } = await supabase
+    .from('notes')
+    .select('*')
+    .order('pinned', { ascending: false })
+    .order('timestamp', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function addNote(note: Omit<Note, 'id' | 'created_at'>): Promise<Note> {
+  const { data, error } = await supabase
+    .from('notes')
+    .insert([note])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateNote(id: number, note: Partial<Note>): Promise<Note> {
+  const { data, error } = await supabase
+    .from('notes')
+    .update(note)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteNote(id: number): Promise<void> {
+  const { error } = await supabase
+    .from('notes')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }
