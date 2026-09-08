@@ -1,7 +1,8 @@
-import { supabase } from './supabase';
+import { createClient } from './supabase';
 import { MilkRecord, MpasiRecord, GrowthRecord, MpasiUnit, UserSettings, AdditionalFood, Note } from './types';
 
 export async function getMilkRecords(userId: string): Promise<MilkRecord[]> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('milk_records')
     .select('*')
@@ -13,6 +14,7 @@ export async function getMilkRecords(userId: string): Promise<MilkRecord[]> {
 }
 
 export async function getMilkRecordsByDateRange(startDate: string, userId: string, endDate?: string): Promise<MilkRecord[]> {
+  const supabase = createClient();
   let query = supabase
     .from('milk_records')
     .select('*')
@@ -30,6 +32,7 @@ export async function getMilkRecordsByDateRange(startDate: string, userId: strin
 }
 
 export async function getMilkRecordsByDate(date: string, userId: string): Promise<MilkRecord[]> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('milk_records')
     .select('*')
@@ -42,6 +45,7 @@ export async function getMilkRecordsByDate(date: string, userId: string): Promis
 }
 
 export async function addMilkRecord(record: Omit<MilkRecord, 'id' | 'created_at'>, userId: string): Promise<MilkRecord> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('milk_records')
     .insert([{ ...record, user_id: userId }])
@@ -53,6 +57,7 @@ export async function addMilkRecord(record: Omit<MilkRecord, 'id' | 'created_at'
 }
 
 export async function deleteMilkRecord(id: number, userId: string): Promise<void> {
+  const supabase = createClient();
   const { error } = await supabase
     .from('milk_records')
     .delete()
@@ -63,6 +68,7 @@ export async function deleteMilkRecord(id: number, userId: string): Promise<void
 }
 
 export async function updateMilkRecord(id: number, record: Partial<MilkRecord>, userId: string): Promise<MilkRecord> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('milk_records')
     .update(record)
@@ -76,6 +82,7 @@ export async function updateMilkRecord(id: number, record: Partial<MilkRecord>, 
 }
 
 export async function deleteAllMilkRecords(userId: string): Promise<void> {
+  const supabase = createClient();
   const { error } = await supabase
     .from('milk_records')
     .delete()
@@ -86,6 +93,7 @@ export async function deleteAllMilkRecords(userId: string): Promise<void> {
 }
 
 export async function getUserSettings(userId: string): Promise<UserSettings | null> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('user_settings')
     .select('*')
@@ -98,6 +106,7 @@ export async function getUserSettings(userId: string): Promise<UserSettings | nu
 }
 
 export async function updateUserSettings(settings: Omit<UserSettings, 'id'>, userId: string): Promise<UserSettings> {
+  const supabase = createClient();
   const existing = await getUserSettings(userId);
 
   if (existing) {
@@ -124,6 +133,7 @@ export async function updateUserSettings(settings: Omit<UserSettings, 'id'>, use
 
 // Mpasi Functions
 export async function getMpasiRecords(userId: string): Promise<MpasiRecord[]> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('mpasi_records')
     .select('*')
@@ -135,6 +145,7 @@ export async function getMpasiRecords(userId: string): Promise<MpasiRecord[]> {
 }
 
 export async function getMpasiRecordsByDateRange(startDate: string, userId: string, endDate?: string): Promise<MpasiRecord[]> {
+  const supabase = createClient();
   let query = supabase
     .from('mpasi_records')
     .select('*')
@@ -152,6 +163,7 @@ export async function getMpasiRecordsByDateRange(startDate: string, userId: stri
 }
 
 export async function getMpasiRecordsByDate(date: string, userId: string): Promise<MpasiRecord[]> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('mpasi_records')
     .select('*')
@@ -164,6 +176,7 @@ export async function getMpasiRecordsByDate(date: string, userId: string): Promi
 }
 
 export async function addMpasiRecord(record: Omit<MpasiRecord, 'id' | 'created_at'>, userId: string): Promise<MpasiRecord> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('mpasi_records')
     .insert([{ ...record, user_id: userId }])
@@ -175,6 +188,7 @@ export async function addMpasiRecord(record: Omit<MpasiRecord, 'id' | 'created_a
 }
 
 export async function deleteMpasiRecord(id: number, userId: string): Promise<void> {
+  const supabase = createClient();
   const { error } = await supabase
     .from('mpasi_records')
     .delete()
@@ -185,6 +199,7 @@ export async function deleteMpasiRecord(id: number, userId: string): Promise<voi
 }
 
 export async function updateMpasiRecord(id: number, record: Partial<MpasiRecord>, userId: string): Promise<MpasiRecord> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('mpasi_records')
     .update(record)
@@ -198,6 +213,7 @@ export async function updateMpasiRecord(id: number, record: Partial<MpasiRecord>
 }
 
 export async function deleteAllMpasiRecords(userId: string): Promise<void> {
+  const supabase = createClient();
   const { error } = await supabase
     .from('mpasi_records')
     .delete()
@@ -209,6 +225,7 @@ export async function deleteAllMpasiRecords(userId: string): Promise<void> {
 
 // Growth Records Functions
 export async function getGrowthRecords(userId: string): Promise<GrowthRecord[]> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('growth_records')
     .select('*')
@@ -220,6 +237,7 @@ export async function getGrowthRecords(userId: string): Promise<GrowthRecord[]> 
 }
 
 export async function getGrowthRecordsByDateRange(startDate: string, userId: string, endDate?: string): Promise<GrowthRecord[]> {
+  const supabase = createClient();
   let query = supabase
     .from('growth_records')
     .select('*')
@@ -237,6 +255,7 @@ export async function getGrowthRecordsByDateRange(startDate: string, userId: str
 }
 
 export async function getGrowthRecordsByDate(date: string, userId: string): Promise<GrowthRecord[]> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('growth_records')
     .select('*')
@@ -249,6 +268,7 @@ export async function getGrowthRecordsByDate(date: string, userId: string): Prom
 }
 
 export async function addGrowthRecord(record: Omit<GrowthRecord, 'id' | 'created_at'>, userId: string): Promise<GrowthRecord> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('growth_records')
     .insert([{ ...record, user_id: userId }])
@@ -260,6 +280,7 @@ export async function addGrowthRecord(record: Omit<GrowthRecord, 'id' | 'created
 }
 
 export async function deleteGrowthRecord(id: number, userId: string): Promise<void> {
+  const supabase = createClient();
   const { error } = await supabase
     .from('growth_records')
     .delete()
@@ -270,6 +291,7 @@ export async function deleteGrowthRecord(id: number, userId: string): Promise<vo
 }
 
 export async function updateGrowthRecord(id: number, record: Partial<GrowthRecord>, userId: string): Promise<GrowthRecord> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('growth_records')
     .update(record)
@@ -283,6 +305,7 @@ export async function updateGrowthRecord(id: number, record: Partial<GrowthRecor
 }
 
 export async function deleteAllGrowthRecords(userId: string): Promise<void> {
+  const supabase = createClient();
   const { error } = await supabase
     .from('growth_records')
     .delete()
@@ -293,6 +316,7 @@ export async function deleteAllGrowthRecords(userId: string): Promise<void> {
 }
 
 export async function deleteAdditionalFood(foodType: 'snack' | 'fruit', date: string, userId: string): Promise<void> {
+  const supabase = createClient();
   const { error } = await supabase
     .from('additional_food')
     .delete()
@@ -304,6 +328,7 @@ export async function deleteAdditionalFood(foodType: 'snack' | 'fruit', date: st
 }
 
 export async function upsertAdditionalFood(foodType: 'snack' | 'fruit', date: string, userId: string): Promise<AdditionalFood> {
+  const supabase = createClient();
   const { data: existing, error: checkError } = await supabase
     .from('additional_food')
     .select('*')
@@ -342,6 +367,7 @@ export async function upsertAdditionalFood(foodType: 'snack' | 'fruit', date: st
 }
 
 export async function getAdditionalFoodByDate(date: string, userId: string): Promise<AdditionalFood[]> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('additional_food')
     .select('*')
@@ -353,6 +379,7 @@ export async function getAdditionalFoodByDate(date: string, userId: string): Pro
 }
 
 export async function getNotes(userId: string): Promise<Note[]> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('notes')
     .select('*')
@@ -365,6 +392,7 @@ export async function getNotes(userId: string): Promise<Note[]> {
 }
 
 export async function addNote(note: Omit<Note, 'id' | 'created_at'>, userId: string): Promise<Note> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('notes')
     .insert([{ ...note, user_id: userId }])
@@ -376,6 +404,7 @@ export async function addNote(note: Omit<Note, 'id' | 'created_at'>, userId: str
 }
 
 export async function updateNote(id: number, note: Partial<Note>, userId: string): Promise<Note> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('notes')
     .update(note)
@@ -389,6 +418,7 @@ export async function updateNote(id: number, note: Partial<Note>, userId: string
 }
 
 export async function deleteNote(id: number, userId: string): Promise<void> {
+  const supabase = createClient();
   const { error } = await supabase
     .from('notes')
     .delete()
