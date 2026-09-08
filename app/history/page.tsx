@@ -2,13 +2,17 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { MilkRecord, MpasiRecord, RecordType, AdditionalFood } from '@/lib/types';
 import { getMilkRecordsByDate, deleteMilkRecord, updateMilkRecord, getMpasiRecordsByDate, deleteMpasiRecord, updateMpasiRecord, getAdditionalFoodByDate } from '@/lib/db';
+import { createClient } from '@/lib/supabase-client';
 
 // Disable static prerendering - this page uses localStorage which isn't available on server
 export const dynamic = 'force-dynamic';
 
 export default function History() {
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [recordType, setRecordType] = useState<RecordType>('susu');
   const [records, setRecords] = useState<MilkRecord[]>([]);
@@ -26,16 +30,31 @@ export default function History() {
   const [additionalFoods, setAdditionalFoods] = useState<AdditionalFood[]>([]);
 
   useEffect(() => {
-    const savedTarget = localStorage.getItem('dailyTarget');
-    const savedTargetMpasi = localStorage.getItem('dailyTargetMpasi');
-    if (savedTarget) {
-      setDailyTarget(parseInt(savedTarget));
+    const initUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      } else {
+        router.push('/login');
+      }
+    };
+    initUser();
+  }, [router]);
+
+  useEffect(() => {
+    if (userId) {
+      const savedTarget = localStorage.getItem('dailyTarget');
+      const savedTargetMpasi = localStorage.getItem('dailyTargetMpasi');
+      if (savedTarget) {
+        setDailyTarget(parseInt(savedTarget));
+      }
+      if (savedTargetMpasi) {
+        setDailyTargetMpasi(parseInt(savedTargetMpasi));
+      }
+      loadData();
     }
-    if (savedTargetMpasi) {
-      setDailyTargetMpasi(parseInt(savedTargetMpasi));
-    }
-    loadData();
-  }, [selectedDate, recordType]);
+  }, [selectedDate, recordType, userId]);
 
   // Close calendar when clicking outside
   useEffect(() => {
@@ -54,17 +73,18 @@ export default function History() {
   }, [showCalendar]);
 
   const loadData = async () => {
+    if (!userId) return;
     try {
       if (recordType === 'susu') {
-        const data = await getMilkRecordsByDate(selectedDate);
+        const data = await getMilkRecordsByDate(selectedDate, userId);
         data.sort((a, b) => b.time.localeCompare(a.time));
         setRecords(data);
       } else {
-        const data = await getMpasiRecordsByDate(selectedDate);
+        const data = await getMpasiRecordsByDate(selectedDate, userId);
         data.sort((a, b) => b.time.localeCompare(a.time));
         setRecordsMpasi(data);
         
-        const additionalData = await getAdditionalFoodByDate(selectedDate);
+        const additionalData = await getAdditionalFoodByDate(selectedDate, userId);
         setAdditionalFoods(additionalData);
       }
     } catch (error) {
@@ -173,12 +193,12 @@ export default function History() {
   };
 
   const handleDelete = async () => {
-    if (deleteId !== null) {
+    if (deleteId !== null && userId) {
       try {
         if (recordType === 'susu') {
-          await deleteMilkRecord(deleteId);
+          await deleteMilkRecord(deleteId, userId);
         } else {
-          await deleteMpasiRecord(deleteId);
+          await deleteMpasiRecord(deleteId, userId);
         }
         setDeleteId(null);
         await loadData();
@@ -200,7 +220,7 @@ export default function History() {
   };
 
   const handleSaveEdit = async () => {
-    if (editId !== null && editAmount) {
+    if (editId !== null && editAmount && userId) {
       try {
         const amount = parseInt(editAmount);
         if (isNaN(amount) || amount <= 0) {
@@ -208,9 +228,9 @@ export default function History() {
           return;
         }
         if (recordType === 'susu') {
-          await updateMilkRecord(editId, { amount });
+          await updateMilkRecord(editId, { amount }, userId);
         } else {
-          await updateMpasiRecord(editId, { amount });
+          await updateMpasiRecord(editId, { amount }, userId);
         }
         setEditId(null);
         setEditAmount('');

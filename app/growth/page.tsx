@@ -2,12 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { GrowthRecord } from '@/lib/types';
 import { getGrowthRecords, addGrowthRecord, deleteGrowthRecord } from '@/lib/db';
+import { createClient } from '@/lib/supabase-client';
 
 export const dynamic = 'force-dynamic';
 
 export default function Growth() {
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
   const [records, setRecords] = useState<GrowthRecord[]>([]);
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
@@ -22,12 +26,28 @@ export default function Growth() {
   const [editNotes, setEditNotes] = useState('');
 
   useEffect(() => {
-    loadData();
-  }, []);
+    const initUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      } else {
+        router.push('/login');
+      }
+    };
+    initUser();
+  }, [router]);
+
+  useEffect(() => {
+    if (userId) {
+      loadData();
+    }
+  }, [userId]);
 
   const loadData = async () => {
+    if (!userId) return;
     try {
-      const data = await getGrowthRecords();
+      const data = await getGrowthRecords(userId);
       setRecords(data);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -36,6 +56,7 @@ export default function Growth() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!userId) return;
     setLoading(true);
     try {
       const now = new Date();
@@ -46,7 +67,7 @@ export default function Growth() {
         notes: notes || undefined,
         timestamp: now.toISOString()
       };
-      await addGrowthRecord(newRecord);
+      await addGrowthRecord(newRecord, userId);
       setWeight('');
       setHeight('');
       setNotes('');
@@ -63,9 +84,9 @@ export default function Growth() {
   };
 
   const handleDelete = async () => {
-    if (deleteId !== null) {
+    if (deleteId !== null && userId) {
       try {
-        await deleteGrowthRecord(deleteId);
+        await deleteGrowthRecord(deleteId, userId);
         setDeleteId(null);
         await loadData();
       } catch (error) {

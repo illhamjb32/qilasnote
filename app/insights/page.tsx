@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { MilkRecord, MpasiRecord, GrowthRecord, RecordType } from '@/lib/types';
 import { getMilkRecords, getMpasiRecords, getGrowthRecords } from '@/lib/db';
+import { createClient } from '@/lib/supabase-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +26,8 @@ interface MonthData {
 }
 
 export default function Insights() {
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
   const [recordType, setRecordType] = useState<RecordType>('susu');
   const [data, setData] = useState<MilkRecord[]>([]);
   const [dataMpasi, setDataMpasi] = useState<MpasiRecord[]>([]);
@@ -35,23 +39,39 @@ export default function Insights() {
   const [dailyTargetMpasi, setDailyTargetMpasi] = useState(500);
 
   useEffect(() => {
-    const savedTarget = localStorage.getItem('dailyTarget');
-    const savedTargetMpasi = localStorage.getItem('dailyTargetMpasi');
-    if (savedTarget) {
-      setDailyTarget(parseInt(savedTarget));
+    const initUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      } else {
+        router.push('/login');
+      }
+    };
+    initUser();
+  }, [router]);
+
+  useEffect(() => {
+    if (userId) {
+      const savedTarget = localStorage.getItem('dailyTarget');
+      const savedTargetMpasi = localStorage.getItem('dailyTargetMpasi');
+      if (savedTarget) {
+        setDailyTarget(parseInt(savedTarget));
+      }
+      if (savedTargetMpasi) {
+        setDailyTargetMpasi(parseInt(savedTargetMpasi));
+      }
+      loadData();
     }
-    if (savedTargetMpasi) {
-      setDailyTargetMpasi(parseInt(savedTargetMpasi));
-    }
-    loadData();
-  }, [dateRange, recordType]);
+  }, [dateRange, recordType, userId]);
 
   const getTodayString = () => new Date().toISOString().split('T')[0];
 
   const loadData = async () => {
+    if (!userId) return;
     try {
       if (recordType === 'susu') {
-        const milkData = await getMilkRecords();
+        const milkData = await getMilkRecords(userId);
         setData(milkData);
         setDataMpasi([]);
         setDataGrowth([]);
@@ -75,7 +95,7 @@ export default function Insights() {
         }
         setChartData(days);
       } else if (recordType === 'mpasi') {
-        const mpasiData = await getMpasiRecords();
+        const mpasiData = await getMpasiRecords(userId);
         setDataMpasi(mpasiData);
         setData([]);
         setDataGrowth([]);
@@ -100,7 +120,7 @@ export default function Insights() {
         setChartData(days);
       } else {
         // Growth - load all data and calculate monthly data
-        const growthData = await getGrowthRecords();
+        const growthData = await getGrowthRecords(userId);
         setDataGrowth(growthData);
         setData([]);
         setDataMpasi([]);

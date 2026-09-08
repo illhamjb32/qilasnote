@@ -2,12 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Note } from '@/lib/types';
 import { getNotes, addNote, updateNote, deleteNote } from '@/lib/db';
+import { createClient } from '@/lib/supabase-client';
 
 export const dynamic = 'force-dynamic';
 
 export default function Notes() {
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -18,12 +22,28 @@ export default function Notes() {
   const [viewNote, setViewNote] = useState<Note | null>(null);
 
   useEffect(() => {
-    loadNotes();
-  }, []);
+    const initUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      } else {
+        router.push('/login');
+      }
+    };
+    initUser();
+  }, [router]);
+
+  useEffect(() => {
+    if (userId) {
+      loadNotes();
+    }
+  }, [userId]);
 
   const loadNotes = async () => {
+    if (!userId) return;
     try {
-      const data = await getNotes();
+      const data = await getNotes(userId);
       setNotes(data);
     } catch (error) {
       console.error('Error loading notes:', error);
@@ -36,20 +56,22 @@ export default function Notes() {
       return;
     }
 
+    if (!userId) return;
+
     try {
       if (editingNote && editingNote.id) {
         await updateNote(editingNote.id, {
           title: title.trim(),
           content: content.trim(),
           timestamp: new Date().toISOString()
-        });
+        }, userId);
       } else {
         await addNote({
           title: title.trim(),
           content: content.trim(),
           pinned: false,
           timestamp: new Date().toISOString()
-        });
+        }, userId);
       }
       
       setTitle('');
@@ -66,9 +88,9 @@ export default function Notes() {
   };
 
   const handlePin = async (note: Note) => {
-    if (!note.id) return;
+    if (!note.id || !userId) return;
     try {
-      await updateNote(note.id, { pinned: !note.pinned });
+      await updateNote(note.id, { pinned: !note.pinned }, userId);
       await loadNotes();
     } catch (error) {
       console.error('Error pinning note:', error);
@@ -83,9 +105,9 @@ export default function Notes() {
   };
 
   const handleDelete = async () => {
-    if (deleteId !== null) {
+    if (deleteId !== null && userId) {
       try {
-        await deleteNote(deleteId);
+        await deleteNote(deleteId, userId);
         setDeleteId(null);
         await loadNotes();
       } catch (error) {

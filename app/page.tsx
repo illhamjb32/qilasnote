@@ -2,12 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { MilkRecord, MpasiRecord, RecordType, MpasiUnit, AdditionalFood } from '@/lib/types';
 import { getMilkRecordsByDate, addMilkRecord, getMpasiRecordsByDate, addMpasiRecord, getUserSettings, upsertAdditionalFood, getAdditionalFoodByDate, deleteAdditionalFood } from '@/lib/db';
+import { createClient } from '@/lib/supabase-client';
 
 export const dynamic = 'force-dynamic';
 
 export default function Home() {
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
   const [recordType, setRecordType] = useState<RecordType>('susu');
   const [totalToday, setTotalToday] = useState(0);
   const [amount, setAmount] = useState('');
@@ -68,11 +72,26 @@ export default function Home() {
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   useEffect(() => {
-    loadSettings();
-    const now = new Date();
-    setTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
-    loadData();
-  }, [recordType]);
+    const initUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      } else {
+        router.push('/login');
+      }
+    };
+    initUser();
+  }, [router]);
+
+  useEffect(() => {
+    if (userId) {
+      loadSettings();
+      const now = new Date();
+      setTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+      loadData();
+    }
+  }, [recordType, userId]);
 
   useEffect(() => {
     setQilaAge(calculateAge());
@@ -83,8 +102,9 @@ export default function Home() {
   }, []);
 
   const loadSettings = async () => {
+    if (!userId) return;
     try {
-      const settings = await getUserSettings();
+      const settings = await getUserSettings(userId);
       if (settings) {
         setDailyTarget(settings.daily_target);
         setDailyTargetMpasi(settings.daily_target_mpasi || 500);
@@ -104,22 +124,23 @@ export default function Home() {
   };
 
   const loadData = async () => {
+    if (!userId) return;
     try {
       const today = getTodayString();
       if (recordType === 'susu') {
-        const data = await getMilkRecordsByDate(today);
+        const data = await getMilkRecordsByDate(today, userId);
         const total = data.reduce((sum, item) => sum + item.amount, 0);
         setTotalToday(total);
         setHistoryToday(data.slice(0, 5));
         setHistoryMpasiToday([]);
       } else {
-        const data = await getMpasiRecordsByDate(today);
+        const data = await getMpasiRecordsByDate(today, userId);
         const total = data.reduce((sum, item) => sum + item.amount, 0);
         setTotalToday(total);
         setHistoryMpasiToday(data.slice(0, 5));
         setHistoryToday([]);
         
-        const additionalFoods = await getAdditionalFoodByDate(today);
+        const additionalFoods = await getAdditionalFoodByDate(today, userId);
         setIsSnack(additionalFoods.some(f => f.food_type === 'snack'));
         setIsFruit(additionalFoods.some(f => f.food_type === 'fruit'));
       }
@@ -130,6 +151,7 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!userId) return;
     setLoading(true);
     try {
       const now = new Date();
@@ -140,7 +162,7 @@ export default function Home() {
           date: getTodayString(),
           timestamp: now.toISOString()
         };
-        await addMilkRecord(newRecord);
+        await addMilkRecord(newRecord, userId);
       } else {
         const newRecord = {
           amount: parseInt(amount),
@@ -149,7 +171,7 @@ export default function Home() {
           date: getTodayString(),
           timestamp: now.toISOString()
         };
-        await addMpasiRecord(newRecord);
+        await addMpasiRecord(newRecord, userId);
       }
       setAmount('');
       setTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
@@ -165,12 +187,13 @@ export default function Home() {
   };
 
   const handleSnackChange = async (checked: boolean) => {
+    if (!userId) return;
     setIsSnack(checked);
     try {
       if (checked) {
-        await upsertAdditionalFood('snack', getTodayString());
+        await upsertAdditionalFood('snack', getTodayString(), userId);
       } else {
-        await deleteAdditionalFood('snack', getTodayString());
+        await deleteAdditionalFood('snack', getTodayString(), userId);
       }
     } catch (error) {
       console.error('Error saving snack:', error);
@@ -178,12 +201,13 @@ export default function Home() {
   };
 
   const handleFruitChange = async (checked: boolean) => {
+    if (!userId) return;
     setIsFruit(checked);
     try {
       if (checked) {
-        await upsertAdditionalFood('fruit', getTodayString());
+        await upsertAdditionalFood('fruit', getTodayString(), userId);
       } else {
-        await deleteAdditionalFood('fruit', getTodayString());
+        await deleteAdditionalFood('fruit', getTodayString(), userId);
       }
     } catch (error) {
       console.error('Error saving fruit:', error);

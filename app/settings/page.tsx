@@ -2,11 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getUserSettings, updateUserSettings } from '@/lib/db';
+import { createClient } from '@/lib/supabase-client';
+import { signOut } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export default function Settings() {
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string>('');
   const [dailyTarget, setDailyTarget] = useState(1000);
   const [dailyTargetMpasi, setDailyTargetMpasi] = useState(500);
   const [showToast, setShowToast] = useState(false);
@@ -15,7 +21,23 @@ export default function Settings() {
   const [reminderInterval, setReminderInterval] = useState('4');
 
   useEffect(() => {
-    loadSettings();
+    const initUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+        setUserEmail(user.email || '');
+      } else {
+        router.push('/login');
+      }
+    };
+    initUser();
+  }, [router]);
+
+  useEffect(() => {
+    if (userId) {
+      loadSettings();
+    }
     
     if (typeof window !== 'undefined' && 'Notification' in window) {
       const reminderEnabled = localStorage.getItem('reminderEnabled') === 'true';
@@ -25,7 +47,7 @@ export default function Settings() {
         scheduleReminders(parseInt(savedInterval));
       }
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     if (notificationEnabled && typeof window !== 'undefined' && 'Notification' in window) {
@@ -35,8 +57,9 @@ export default function Settings() {
   }, [reminderInterval, notificationEnabled]);
 
   const loadSettings = async () => {
+    if (!userId) return;
     try {
-      const settings = await getUserSettings();
+      const settings = await getUserSettings(userId);
       if (settings) {
         setDailyTarget(settings.daily_target);
         setDailyTargetMpasi(settings.daily_target_mpasi || 500);
@@ -51,13 +74,14 @@ export default function Settings() {
   };
 
   const handleSave = async () => {
+    if (!userId) return;
     try {
       await updateUserSettings({
         daily_target: dailyTarget,
         daily_target_mpasi: dailyTargetMpasi,
         notifications_enabled: notificationEnabled,
         reminder_interval: parseInt(reminderInterval)
-      });
+      }, userId);
       localStorage.setItem('dailyTarget', dailyTarget.toString());
       localStorage.setItem('dailyTargetMpasi', dailyTargetMpasi.toString());
       setToastMessage('Berhasil disimpan!');
@@ -444,7 +468,32 @@ export default function Settings() {
               <span className="text-on-surface-variant">Tipe</span>
               <span className="text-on-surface font-semibold text-right">Pencatat Susu & MPASI Bayi</span>
             </div>
+            <div className="flex justify-between p-3 bg-surface-container rounded-xl">
+              <span className="text-on-surface-variant">Email</span>
+              <span className="text-on-surface font-semibold text-right">{userEmail}</span>
+            </div>
           </div>
+        </div>
+
+        {/* Sign Out Section */}
+        <div className="card p-6 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full bg-error-container flex items-center justify-center">
+              <span className="material-symbols-outlined text-error">logout</span>
+            </div>
+            <div>
+              <h2 className="text-headline-sm text-on-surface">Keluar</h2>
+              <p className="text-label text-on-surface-variant">Keluar dari akun Anda</p>
+            </div>
+          </div>
+
+          <button
+            onClick={signOut}
+            className="btn w-full py-4 bg-error-container text-error hover:bg-error hover:text-on-error"
+          >
+            <span className="material-symbols-outlined mr-2">logout</span>
+            Keluar dari Akun
+          </button>
         </div>
 
         {/* Data Management */}
