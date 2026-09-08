@@ -2,6 +2,7 @@ import { createClient } from './supabase-client'
 
 const ALLOWED_EMAILS = [
   'ilhamjb23@gmail.com',
+  'ilhamjb32@gmail.com',
   'shaviraadianda123@gmail.com'
 ]
 
