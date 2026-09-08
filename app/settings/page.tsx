@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getUserSettings, updateUserSettings } from '@/lib/db';
+import { getUserSettingsAPI, updateUserSettingsAPI } from '@/lib/api-client';
 import { createClient } from '@/lib/supabase-client';
 import { signOut } from '@/lib/auth';
 
@@ -59,7 +59,7 @@ export default function Settings() {
   const loadSettings = async () => {
     if (!userId) return;
     try {
-      const settings = await getUserSettings(userId);
+      const settings = await getUserSettingsAPI();
       if (settings) {
         setDailyTarget(settings.daily_target);
         setDailyTargetMpasi(settings.daily_target_mpasi || 500);
@@ -76,12 +76,12 @@ export default function Settings() {
   const handleSave = async () => {
     if (!userId) return;
     try {
-      await updateUserSettings({
+      await updateUserSettingsAPI({
         daily_target: dailyTarget,
         daily_target_mpasi: dailyTargetMpasi,
         notifications_enabled: notificationEnabled,
         reminder_interval: parseInt(reminderInterval)
-      }, userId);
+      });
       localStorage.setItem('dailyTarget', dailyTarget.toString());
       localStorage.setItem('dailyTargetMpasi', dailyTargetMpasi.toString());
       setToastMessage('Berhasil disimpan!');

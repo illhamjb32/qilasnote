@@ -1,12 +1,16 @@
 import { createClient } from './supabase';
 import { MilkRecord, MpasiRecord, GrowthRecord, MpasiUnit, UserSettings, AdditionalFood, Note } from './types';
 
+// SHARED DATASET MODE: all whitelisted accounts read/write the SAME single dataset.
+// Every query targets the primary owner's ID regardless of which email is logged in.
+export const SHARED_USER_ID = '7689a64f-5497-4855-976e-3215ed93c6d3';
+
 export async function getMilkRecords(userId: string): Promise<MilkRecord[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('milk_records')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .order('timestamp', { ascending: false });
 
   if (error) throw error;
@@ -18,7 +22,7 @@ export async function getMilkRecordsByDateRange(startDate: string, userId: strin
   let query = supabase
     .from('milk_records')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .gte('date', startDate);
   
   if (endDate) {
@@ -37,7 +41,7 @@ export async function getMilkRecordsByDate(date: string, userId: string): Promis
     .from('milk_records')
     .select('*')
     .eq('date', date)
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .order('time', { ascending: false });
 
   if (error) throw error;
@@ -48,7 +52,7 @@ export async function addMilkRecord(record: Omit<MilkRecord, 'id' | 'created_at'
   const supabase = createClient();
   const { data, error } = await supabase
     .from('milk_records')
-    .insert([{ ...record, user_id: userId }])
+    .insert([{ ...record, user_id: SHARED_USER_ID }])
     .select()
     .single();
 
@@ -62,7 +66,7 @@ export async function deleteMilkRecord(id: number, userId: string): Promise<void
     .from('milk_records')
     .delete()
     .eq('id', id)
-    .eq('user_id', userId);
+    .eq('user_id', SHARED_USER_ID);
 
   if (error) throw error;
 }
@@ -73,7 +77,7 @@ export async function updateMilkRecord(id: number, record: Partial<MilkRecord>, 
     .from('milk_records')
     .update(record)
     .eq('id', id)
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .select()
     .single();
 
@@ -86,7 +90,7 @@ export async function deleteAllMilkRecords(userId: string): Promise<void> {
   const { error } = await supabase
     .from('milk_records')
     .delete()
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .neq('id', 0);
 
   if (error) throw error;
@@ -94,14 +98,34 @@ export async function deleteAllMilkRecords(userId: string): Promise<void> {
 
 export async function getUserSettings(userId: string): Promise<UserSettings | null> {
   const supabase = createClient();
+  // maybeSingle() = no 406 error when 0 rows (returns null instead)
   const { data, error } = await supabase
     .from('user_settings')
     .select('*')
-    .eq('user_id', userId)
-    .limit(1)
-    .single();
+    .eq('user_id', SHARED_USER_ID)
+    .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') throw error;
+  if (error) throw error;
+
+  // New user has no settings row yet -> auto-create defaults
+  if (!data) {
+    const { data: created, error: insertError } = await supabase
+      .from('user_settings')
+      .insert([{
+        user_id: SHARED_USER_ID,
+        daily_target: 1000,
+        daily_target_mpasi: 500
+      }])
+      .select()
+      .maybeSingle();
+
+    if (insertError) {
+      console.error('Failed to create default settings:', insertError);
+      return null; // UI falls back to default values
+    }
+    return created;
+  }
+
   return data;
 }
 
@@ -122,7 +146,7 @@ export async function updateUserSettings(settings: Omit<UserSettings, 'id'>, use
   } else {
     const { data, error } = await supabase
       .from('user_settings')
-      .insert([{ ...settings, user_id: userId }])
+      .insert([{ ...settings, user_id: SHARED_USER_ID }])
       .select()
       .single();
 
@@ -137,7 +161,7 @@ export async function getMpasiRecords(userId: string): Promise<MpasiRecord[]> {
   const { data, error } = await supabase
     .from('mpasi_records')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .order('timestamp', { ascending: false });
 
   if (error) throw error;
@@ -149,7 +173,7 @@ export async function getMpasiRecordsByDateRange(startDate: string, userId: stri
   let query = supabase
     .from('mpasi_records')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .gte('date', startDate);
 
   if (endDate) {
@@ -168,7 +192,7 @@ export async function getMpasiRecordsByDate(date: string, userId: string): Promi
     .from('mpasi_records')
     .select('*')
     .eq('date', date)
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .order('time', { ascending: false });
 
   if (error) throw error;
@@ -179,7 +203,7 @@ export async function addMpasiRecord(record: Omit<MpasiRecord, 'id' | 'created_a
   const supabase = createClient();
   const { data, error } = await supabase
     .from('mpasi_records')
-    .insert([{ ...record, user_id: userId }])
+    .insert([{ ...record, user_id: SHARED_USER_ID }])
     .select()
     .single();
 
@@ -193,7 +217,7 @@ export async function deleteMpasiRecord(id: number, userId: string): Promise<voi
     .from('mpasi_records')
     .delete()
     .eq('id', id)
-    .eq('user_id', userId);
+    .eq('user_id', SHARED_USER_ID);
 
   if (error) throw error;
 }
@@ -204,7 +228,7 @@ export async function updateMpasiRecord(id: number, record: Partial<MpasiRecord>
     .from('mpasi_records')
     .update(record)
     .eq('id', id)
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .select()
     .single();
 
@@ -217,7 +241,7 @@ export async function deleteAllMpasiRecords(userId: string): Promise<void> {
   const { error } = await supabase
     .from('mpasi_records')
     .delete()
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .neq('id', 0);
 
   if (error) throw error;
@@ -229,7 +253,7 @@ export async function getGrowthRecords(userId: string): Promise<GrowthRecord[]> 
   const { data, error } = await supabase
     .from('growth_records')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .order('date', { ascending: false });
 
   if (error) throw error;
@@ -241,7 +265,7 @@ export async function getGrowthRecordsByDateRange(startDate: string, userId: str
   let query = supabase
     .from('growth_records')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .gte('date', startDate);
 
   if (endDate) {
@@ -260,7 +284,7 @@ export async function getGrowthRecordsByDate(date: string, userId: string): Prom
     .from('growth_records')
     .select('*')
     .eq('date', date)
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .order('timestamp', { ascending: false });
 
   if (error) throw error;
@@ -271,7 +295,7 @@ export async function addGrowthRecord(record: Omit<GrowthRecord, 'id' | 'created
   const supabase = createClient();
   const { data, error } = await supabase
     .from('growth_records')
-    .insert([{ ...record, user_id: userId }])
+    .insert([{ ...record, user_id: SHARED_USER_ID }])
     .select()
     .single();
 
@@ -285,7 +309,7 @@ export async function deleteGrowthRecord(id: number, userId: string): Promise<vo
     .from('growth_records')
     .delete()
     .eq('id', id)
-    .eq('user_id', userId);
+    .eq('user_id', SHARED_USER_ID);
 
   if (error) throw error;
 }
@@ -296,7 +320,7 @@ export async function updateGrowthRecord(id: number, record: Partial<GrowthRecor
     .from('growth_records')
     .update(record)
     .eq('id', id)
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .select()
     .single();
 
@@ -309,7 +333,7 @@ export async function deleteAllGrowthRecords(userId: string): Promise<void> {
   const { error } = await supabase
     .from('growth_records')
     .delete()
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .neq('id', 0);
 
   if (error) throw error;
@@ -322,7 +346,7 @@ export async function deleteAdditionalFood(foodType: 'snack' | 'fruit', date: st
     .delete()
     .eq('food_type', foodType)
     .eq('date', date)
-    .eq('user_id', userId);
+    .eq('user_id', SHARED_USER_ID);
 
   if (error) throw error;
 }
@@ -334,7 +358,7 @@ export async function upsertAdditionalFood(foodType: 'snack' | 'fruit', date: st
     .select('*')
     .eq('food_type', foodType)
     .eq('date', date)
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .single();
 
   if (checkError && checkError.code !== 'PGRST116') throw checkError;
@@ -356,7 +380,7 @@ export async function upsertAdditionalFood(foodType: 'snack' | 'fruit', date: st
         food_type: foodType,
         date,
         timestamp: new Date().toISOString(),
-        user_id: userId
+        user_id: SHARED_USER_ID
       }])
       .select()
       .single();
@@ -372,7 +396,7 @@ export async function getAdditionalFoodByDate(date: string, userId: string): Pro
     .from('additional_food')
     .select('*')
     .eq('date', date)
-    .eq('user_id', userId);
+    .eq('user_id', SHARED_USER_ID);
 
   if (error) throw error;
   return data || [];
@@ -383,7 +407,7 @@ export async function getNotes(userId: string): Promise<Note[]> {
   const { data, error } = await supabase
     .from('notes')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .order('pinned', { ascending: false })
     .order('timestamp', { ascending: false });
 
@@ -395,7 +419,7 @@ export async function addNote(note: Omit<Note, 'id' | 'created_at'>, userId: str
   const supabase = createClient();
   const { data, error } = await supabase
     .from('notes')
-    .insert([{ ...note, user_id: userId }])
+    .insert([{ ...note, user_id: SHARED_USER_ID }])
     .select()
     .single();
 
@@ -409,7 +433,7 @@ export async function updateNote(id: number, note: Partial<Note>, userId: string
     .from('notes')
     .update(note)
     .eq('id', id)
-    .eq('user_id', userId)
+    .eq('user_id', SHARED_USER_ID)
     .select()
     .single();
 
@@ -423,7 +447,7 @@ export async function deleteNote(id: number, userId: string): Promise<void> {
     .from('notes')
     .delete()
     .eq('id', id)
-    .eq('user_id', userId);
+    .eq('user_id', SHARED_USER_ID);
 
   if (error) throw error;
 }
