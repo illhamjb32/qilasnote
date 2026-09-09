@@ -19,32 +19,43 @@ export async function middleware(request: NextRequest) {
     "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://accounts.google.com"
   )
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value)
-            response.cookies.set(name, value, options)
-          })
-        },
-      },
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return response
     }
-  )
 
-  const { data: { user } } = await supabase.auth.getUser()
+    const supabase = createServerClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              request.cookies.set(name, value)
+              response.cookies.set(name, value, options)
+            })
+          },
+        },
+      }
+    )
 
-  if (!user && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/auth/callback')) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+    const { data: { user } } = await supabase.auth.getUser()
 
-  if (user && request.nextUrl.pathname === '/login') {
-    return NextResponse.redirect(new URL('/', request.url))
+    if (!user && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/auth/callback')) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+
+    if (user && request.nextUrl.pathname === '/login') {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  } catch (error) {
+    console.error('Middleware error:', error)
   }
 
   return response

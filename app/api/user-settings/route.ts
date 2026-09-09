@@ -19,14 +19,16 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 2. Query pakai service role (bypass RLS) - SHARED dataset (fixed owner ID)
+    // 2. Query data with serviceClient if available, otherwise authClient
     const serviceClient = createServiceClient()
-    const { data, error } = await serviceClient
+    const client = serviceClient || authClient
+
+    const { data, error } = await client
       .from('user_settings')
       .select('*')
       .eq('user_id', SHARED_USER_ID)
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (error && error.code !== 'PGRST116') {
       console.error('Error fetching user settings:', error)
@@ -75,9 +77,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { daily_target, daily_target_mpasi, notifications_enabled, reminder_interval } = body
 
-    // 3. Upsert with service role
+    // 3. Upsert data with serviceClient if available, otherwise authClient
     const serviceClient = createServiceClient()
-    const { data, error } = await serviceClient
+    const client = serviceClient || authClient
+
+    const { data, error } = await client
       .from('user_settings')
       .upsert(
         {
@@ -91,7 +95,7 @@ export async function POST(request: NextRequest) {
         { onConflict: 'user_id' }
       )
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Error upserting user settings:', error)

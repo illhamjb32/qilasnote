@@ -109,6 +109,7 @@ export default function Home() {
         setDailyTarget(settings.daily_target);
         setDailyTargetMpasi(settings.daily_target_mpasi || 500);
         localStorage.setItem('dailyTarget', settings.daily_target.toString());
+        localStorage.setItem('dailyTargetMpasi', (settings.daily_target_mpasi || 500).toString());
       }
     } catch (error) {
       console.error('Error loading settings:', error);

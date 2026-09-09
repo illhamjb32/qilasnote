@@ -73,17 +73,22 @@ export default function Settings() {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (override?: { daily_target?: number; daily_target_mpasi?: number; notifications_enabled?: boolean; reminder_interval?: number }) => {
     if (!userId) return;
+    const targetToSave = override?.daily_target ?? dailyTarget;
+    const targetMpasiToSave = override?.daily_target_mpasi ?? dailyTargetMpasi;
+    const notifyToSave = override?.notifications_enabled ?? notificationEnabled;
+    const intervalToSave = override?.reminder_interval ?? parseInt(reminderInterval);
+
     try {
       await updateUserSettingsAPI({
-        daily_target: dailyTarget,
-        daily_target_mpasi: dailyTargetMpasi,
-        notifications_enabled: notificationEnabled,
-        reminder_interval: parseInt(reminderInterval)
+        daily_target: targetToSave,
+        daily_target_mpasi: targetMpasiToSave,
+        notifications_enabled: notifyToSave,
+        reminder_interval: intervalToSave
       });
-      localStorage.setItem('dailyTarget', dailyTarget.toString());
-      localStorage.setItem('dailyTargetMpasi', dailyTargetMpasi.toString());
+      localStorage.setItem('dailyTarget', targetToSave.toString());
+      localStorage.setItem('dailyTargetMpasi', targetMpasiToSave.toString());
       setToastMessage('Berhasil disimpan!');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 2000);
@@ -239,7 +244,10 @@ export default function Settings() {
               {presetTargetsSusu.map((target) => (
                 <button
                   key={target}
-                  onClick={() => setDailyTarget(target)}
+                  onClick={() => {
+                    setDailyTarget(target);
+                    handleSave({ daily_target: target });
+                  }}
                   className={`py-3 rounded-xl text-label transition-all ${
                     dailyTarget === target
                       ? 'bg-primary text-on-primary'
@@ -288,7 +296,7 @@ export default function Settings() {
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-label">ml</span>
               </div>
               <button
-                onClick={handleSave}
+                onClick={() => handleSave()}
                 className="btn btn-primary px-6"
               >
                 Simpan
@@ -322,7 +330,10 @@ export default function Settings() {
               {presetTargetsMpasi.map((target) => (
                 <button
                   key={target}
-                  onClick={() => setDailyTargetMpasi(target)}
+                  onClick={() => {
+                    setDailyTargetMpasi(target);
+                    handleSave({ daily_target_mpasi: target });
+                  }}
                   className={`py-3 rounded-xl text-label transition-all ${
                     dailyTargetMpasi === target
                       ? 'bg-secondary text-on-secondary'
@@ -371,7 +382,7 @@ export default function Settings() {
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-label">ml/gr</span>
               </div>
               <button
-                onClick={handleSave}
+                onClick={() => handleSave()}
                 className="btn btn-secondary px-6"
               >
                 Simpan
