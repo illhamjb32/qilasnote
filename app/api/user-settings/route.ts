@@ -77,35 +77,56 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { daily_target, daily_target_mpasi, notifications_enabled, reminder_interval } = body
 
-    // 3. Upsert data with serviceClient if available, otherwise authClient
+    const fields = {
+      daily_target: daily_target || 1000,
+      daily_target_mpasi: daily_target_mpasi || 500,
+      notifications_enabled: notifications_enabled ?? true,
+      reminder_interval: reminder_interval || 4,
+      updated_at: new Date().toISOString()
+    }
+
+    // 3. Upsert with serviceClient if available, otherwise authClient
+    //    NOTE: .upsert({ onConflict: 'user_id' }) fails with 42P10 because
+    //    user_id has no unique constraint in the DB. Use update-then-insert
+    //    instead — UPDATE ... WHERE user_id = ... needs no constraint.
     const serviceClient = createServiceClient()
     const client = serviceClient || authClient
 
-    const { data, error } = await client
+    const { data: updated, error: updateError } = await client
       .from('user_settings')
-      .upsert(
-        {
-          user_id: SHARED_USER_ID,
-          daily_target: daily_target || 1000,
-          daily_target_mpasi: daily_target_mpasi || 500,
-          notifications_enabled: notifications_enabled ?? true,
-          reminder_interval: reminder_interval || 4,
-          updated_at: new Date().toISOString()
-        },
-        { onConflict: 'user_id' }
-      )
+      .update(fields)
+      .eq('user_id', SHARED_USER_ID)
       .select()
       .maybeSingle()
 
-    if (error) {
-      console.error('Error upserting user settings:', error)
+    if (updateError) {
+      console.error('Error updating user settings:', updateError)
       return NextResponse.json(
-        { error: 'Failed to save settings', details: error.message },
+        { error: 'Failed to save settings', details: updateError.message },
         { status: 500 }
       )
     }
 
-    return NextResponse.json(data)
+    if (updated) {
+      return NextResponse.json(updated)
+    }
+
+    // 4. No existing row -> insert
+    const { data: inserted, error: insertError } = await client
+      .from('user_settings')
+      .insert({ user_id: SHARED_USER_ID, ...fields })
+      .select()
+      .single()
+
+    if (insertError) {
+      console.error('Error inserting user settings:', insertError)
+      return NextResponse.json(
+        { error: 'Failed to save settings', details: insertError.message },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json(inserted)
   } catch (error: any) {
     console.error('API error:', error)
     return NextResponse.json(
