@@ -452,15 +452,15 @@ export default function Home() {
               <div className="mt-3">
                 <input
                   type="range"
-                  min="30"
+                  min="10"
                   max={recordType === 'susu' ? '300' : '300'}
-                  step="30"
+                  step="10"
                   value={amount || 0}
                   onChange={(e) => setAmount(e.target.value)}
                   className="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer"
                 />
                 <div className="flex justify-between text-label text-on-surface-variant mt-1">
-                  <span>30</span>
+                  <span>10</span>
                   <span>{recordType === 'susu' ? '300' : '300'}</span>
                 </div>
               </div>
