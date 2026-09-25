@@ -364,7 +364,12 @@ export default function Home() {
                       setQuickValuesMpasi(newValues);
                     }
                   }}
-                  className="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer"
+                  className="slider"
+                  style={{
+                    ['--slider-thumb' as string]: recordType === 'mpasi' ? '#f97316' : '#2e6385',
+                    ['--slider-track' as string]: '#e8e8e8',
+                    background: `linear-gradient(to right, ${recordType === 'mpasi' ? '#f97316' : '#2e6385'} 0%, ${recordType === 'mpasi' ? '#f97316' : '#2e6385'} ${Math.min((value / (recordType === 'susu' ? 300 : 500)) * 100, 100)}%, #e8e8e8 ${Math.min((value / (recordType === 'susu' ? 300 : 500)) * 100, 100)}%, #e8e8e8 100%)`,
+                  }}
                 />
               </div>
             ))}
@@ -457,8 +462,12 @@ export default function Home() {
                   step="10"
                   value={amount || '10'}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full h-2 rounded-lg cursor-pointer"
-                  style={{ accentColor: recordType === 'mpasi' ? '#f97316' : '#2e6385' }}
+                  className="slider"
+                  style={{
+                    ['--slider-thumb' as string]: recordType === 'mpasi' ? '#f97316' : '#2e6385',
+                    ['--slider-track' as string]: '#e8e8e8',
+                    background: `linear-gradient(to right, ${recordType === 'mpasi' ? '#f97316' : '#2e6385'} 0%, ${recordType === 'mpasi' ? '#f97316' : '#2e6385'} ${Math.min((parseInt(amount || '10', 10) / 300) * 100, 100)}%, #e8e8e8 ${Math.min((parseInt(amount || '10', 10) / 300) * 100, 100)}%, #e8e8e8 100%)`,
+                  }}
                 />
                 <div className="flex justify-between text-label text-on-surface-variant mt-1">
                   <span>10</span>
