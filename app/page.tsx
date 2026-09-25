@@ -453,15 +453,16 @@ export default function Home() {
                 <input
                   type="range"
                   min="10"
-                  max={recordType === 'susu' ? '300' : '300'}
+                  max="300"
                   step="10"
-                  value={amount || 0}
+                  value={amount || '10'}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 rounded-lg cursor-pointer"
+                  style={{ accentColor: recordType === 'mpasi' ? '#f97316' : '#2e6385' }}
                 />
                 <div className="flex justify-between text-label text-on-surface-variant mt-1">
                   <span>10</span>
-                  <span>{recordType === 'susu' ? '300' : '300'}</span>
+                  <span>300</span>
                 </div>
               </div>
             </div>
