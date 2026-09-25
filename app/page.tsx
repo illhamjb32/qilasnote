@@ -24,8 +24,8 @@ export default function Home() {
   const [dailyTargetMpasi, setDailyTargetMpasi] = useState(500);
   const [loading, setLoading] = useState(false);
   const [showCustomInput, setShowCustomInput] = useState(false);
-  const [quickValues, setQuickValues] = useState([60, 90, 120, 150]);
-  const [quickValuesMpasi, setQuickValuesMpasi] = useState([50, 100, 150, 200]);
+  const [quickValues, setQuickValues] = useState([30, 60, 120, 150, 180, 210]);
+  const [quickValuesMpasi, setQuickValuesMpasi] = useState([30, 60, 120, 150, 180, 210]);
   const [isSnack, setIsSnack] = useState(false);
   const [isFruit, setIsFruit] = useState(false);
   const [showTips, setShowTips] = useState(false);
@@ -448,24 +448,22 @@ export default function Home() {
                 placeholder={`Masukkan jumlah ${recordType === 'susu' ? 'ml' : mpasiUnit}`}
                 required min="1"
               />
-              {/* Slider only for Susu */}
-              {recordType === 'susu' && (
-                <div className="mt-3">
-                  <input
-                    type="range"
-                    min="10"
-                    max="300"
-                    step="10"
-                    value={amount || 0}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer"
-                  />
-                  <div className="flex justify-between text-label text-on-surface-variant mt-1">
-                    <span>10</span>
-                    <span>300</span>
-                  </div>
+              {/* Slider for Susu & MPASI */}
+              <div className="mt-3">
+                <input
+                  type="range"
+                  min="30"
+                  max={recordType === 'susu' ? '300' : '300'}
+                  step="30"
+                  value={amount || 0}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-label text-on-surface-variant mt-1">
+                  <span>30</span>
+                  <span>{recordType === 'susu' ? '300' : '300'}</span>
                 </div>
-              )}
+              </div>
             </div>
             
             <div className="mb-4">
